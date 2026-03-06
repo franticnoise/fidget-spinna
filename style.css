@@ -52,7 +52,8 @@ body {
   opacity: 0.9;
 }
 
-#motionBtn {
+#motionBtn,
+#recenterBtn {
   pointer-events: auto;
   border: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.2);
@@ -63,8 +64,13 @@ body {
   letter-spacing: 0.03em;
 }
 
-#motionBtn:active {
+#motionBtn:active,
+#recenterBtn:active {
   transform: scale(0.98);
+}
+
+#recenterBtn {
+  margin-left: 8px;
 }
 
 @media (max-width: 600px) {

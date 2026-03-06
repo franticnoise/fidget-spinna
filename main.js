@@ -2,6 +2,7 @@ import * as THREE from "https://unpkg.com/three@0.163.0/build/three.module.js";
 
 const canvas = document.getElementById("app");
 const motionBtn = document.getElementById("motionBtn");
+const recenterBtn = document.getElementById("recenterBtn");
 const statusEl = document.getElementById("status");
 
 const scene = new THREE.Scene();
@@ -140,7 +141,10 @@ const euler = new THREE.Euler();
 const q0 = new THREE.Quaternion();
 const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 const deviceQuat = new THREE.Quaternion();
+const neutralQuat = new THREE.Quaternion();
+const correctedEuler = new THREE.Euler();
 let screenOrientation = 0;
+let hasNeutralOrientation = false;
 
 function setObjectQuaternion(outQuat, alpha, beta, gamma, orient) {
   euler.set(beta, alpha, -gamma, "YXZ");
@@ -155,6 +159,11 @@ function handleOrientation(event) {
   const gamma = THREE.MathUtils.degToRad(event.gamma ?? 0);
 
   setObjectQuaternion(deviceQuat, alpha, beta, gamma, screenOrientation);
+
+  if (motionEnabled && !hasNeutralOrientation) {
+    neutralQuat.copy(deviceQuat);
+    hasNeutralOrientation = true;
+  }
 }
 
 function updateScreenOrientation() {
@@ -166,6 +175,18 @@ updateScreenOrientation();
 window.addEventListener("orientationchange", updateScreenOrientation);
 
 let motionEnabled = false;
+
+function recenterTilt() {
+  if (!motionEnabled) {
+    statusEl.textContent = "Enable motion first, then recenter.";
+    return;
+  }
+
+  neutralQuat.copy(deviceQuat);
+  hasNeutralOrientation = true;
+  statusEl.textContent = "Tilt recentered for your hand angle.";
+}
+
 async function enableMotion() {
   if (motionEnabled) {
     return;
@@ -194,8 +215,10 @@ async function enableMotion() {
 
     window.addEventListener("deviceorientation", handleOrientation, true);
     motionEnabled = true;
-    motionBtn.style.display = "none";
-    statusEl.textContent = "Motion enabled. Swipe around center to spin.";
+    hasNeutralOrientation = false;
+    motionBtn.hidden = true;
+    recenterBtn.hidden = false;
+    statusEl.textContent = "Motion enabled. Hold naturally and tap Recenter Tilt if needed.";
   } catch (err) {
     statusEl.textContent = "Motion unavailable on this device/browser.";
     console.error(err);
@@ -203,6 +226,7 @@ async function enableMotion() {
 }
 
 motionBtn.addEventListener("click", enableMotion);
+recenterBtn.addEventListener("click", recenterTilt);
 
 let audioCtx = null;
 let audioReady = false;
@@ -257,6 +281,7 @@ function playTick(speed) {
 
 let lastHapticTime = 0;
 let prevVelocity = 0;
+let lastTickHapticTime = 0;
 
 function pulseHaptic(pattern) {
   if (!canVibrate) {
@@ -283,13 +308,6 @@ function updateHaptics(now) {
   if (accel < -0.08 && now - lastHapticTime > 100) {
     pulseHaptic([5, 14, 5]);
     lastHapticTime = now;
-    return;
-  }
-
-  const beatInterval = THREE.MathUtils.clamp(220 - speed * 7, 45, 200);
-  if (now - lastHapticTime > beatInterval) {
-    pulseHaptic(3);
-    lastHapticTime = now;
   }
 }
 
@@ -302,6 +320,11 @@ function updateTick(now) {
   const tickInterval = THREE.MathUtils.clamp(220 - speed * 9, 38, 210);
   if (now - lastTickTime > tickInterval) {
     playTick(speed);
+    const hapticTickInterval = Math.max(55, tickInterval * 0.85);
+    if (now - lastTickHapticTime > hapticTickInterval) {
+      pulseHaptic(2);
+      lastTickHapticTime = now;
+    }
     lastTickTime = now;
   }
 }
@@ -320,6 +343,13 @@ function animate() {
   spinner.rotation.z = spinAngle;
 
   const target = deviceQuat.clone().invert();
+  if (hasNeutralOrientation) {
+    target.premultiply(neutralQuat);
+  }
+
+  correctedEuler.setFromQuaternion(target, "YXZ");
+  correctedEuler.x *= -1;
+  target.setFromEuler(correctedEuler);
   stabilizer.quaternion.slerp(target, motionEnabled ? 0.08 : 0.02);
 
   const wobble = THREE.MathUtils.clamp(Math.abs(angularVelocity) / 65, 0, 0.07);
