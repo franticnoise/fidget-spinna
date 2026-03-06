@@ -4,6 +4,7 @@ const canvas = document.getElementById("app");
 const motionBtn = document.getElementById("motionBtn");
 const recenterBtn = document.getElementById("recenterBtn");
 const statusEl = document.getElementById("status");
+const isMobile = window.matchMedia("(pointer: coarse)").matches;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
@@ -13,8 +14,22 @@ const canVibrate = typeof navigator !== "undefined" && typeof navigator.vibrate 
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 0, 7);
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: !isMobile,
+  powerPreference: "high-performance",
+  alpha: false,
+});
+
+function getRenderPixelRatio() {
+  // Higher FPS on phones usually requires avoiding very high DPR rendering.
+  if (isMobile) {
+    return Math.min(window.devicePixelRatio, 1.1);
+  }
+  return Math.min(window.devicePixelRatio, 1.75);
+}
+
+renderer.setPixelRatio(getRenderPixelRatio());
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 const lineMaterial = new THREE.LineBasicMaterial({
@@ -142,6 +157,7 @@ const q0 = new THREE.Quaternion();
 const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 const deviceQuat = new THREE.Quaternion();
 const neutralQuat = new THREE.Quaternion();
+const targetQuat = new THREE.Quaternion();
 const correctedEuler = new THREE.Euler();
 let screenOrientation = 0;
 let hasNeutralOrientation = false;
@@ -331,7 +347,7 @@ function updateTick(now) {
 
 const clock = new THREE.Clock();
 function animate() {
-  const dt = Math.min(clock.getDelta(), 1 / 30);
+  const dt = Math.min(clock.getDelta(), 1 / 20);
   const now = performance.now();
 
   spinAngle += angularVelocity * dt;
@@ -342,15 +358,15 @@ function animate() {
 
   spinner.rotation.z = spinAngle;
 
-  const target = deviceQuat.clone().invert();
+  targetQuat.copy(deviceQuat).invert();
   if (hasNeutralOrientation) {
-    target.premultiply(neutralQuat);
+    targetQuat.premultiply(neutralQuat);
   }
 
-  correctedEuler.setFromQuaternion(target, "YXZ");
+  correctedEuler.setFromQuaternion(targetQuat, "YXZ");
   correctedEuler.x *= -1;
-  target.setFromEuler(correctedEuler);
-  stabilizer.quaternion.slerp(target, motionEnabled ? 0.08 : 0.02);
+  targetQuat.setFromEuler(correctedEuler);
+  stabilizer.quaternion.slerp(targetQuat, motionEnabled ? 0.12 : 0.03);
 
   const wobble = THREE.MathUtils.clamp(Math.abs(angularVelocity) / 65, 0, 0.07);
   spinner.rotation.x = Math.sin(now * 0.003) * wobble;
@@ -368,6 +384,7 @@ animate();
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  renderer.setPixelRatio(getRenderPixelRatio());
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
