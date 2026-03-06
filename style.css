@@ -1,0 +1,83 @@
+:root {
+  --bg: #040608;
+  --line: #76ddff;
+  --line-soft: rgba(118, 221, 255, 0.25);
+  --text: #b7f0ff;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+  background: radial-gradient(circle at 20% 10%, #10202a 0%, var(--bg) 35%, #000 100%);
+  color: var(--text);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#hud {
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 10;
+  padding: 16px;
+  max-width: 320px;
+  pointer-events: none;
+}
+
+#hud h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#hud p {
+  margin: 8px 0;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  opacity: 0.9;
+}
+
+#motionBtn {
+  pointer-events: auto;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--line);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+#motionBtn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 600px) {
+  #hud {
+    max-width: 100%;
+    padding: 12px;
+  }
+
+  #hud h1 {
+    font-size: 1.05rem;
+  }
+
+  #hud p {
+    font-size: 0.8rem;
+  }
+}
