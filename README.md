@@ -30,3 +30,27 @@ For iPhone Safari:
 - Haptics require browser support for `navigator.vibrate`.
 - On some iOS versions, vibration support may be limited.
 - Audio starts after the first touch (browser autoplay policy).
+
+## iOS App (Native Haptics)
+This project can run as a native iOS app using Capacitor, which enables much better haptics than Safari web vibration.
+
+Install dependencies (already done once in this repo):
+
+```bash
+cd /Users/mbenamo/Documents/devgame/fidget-spinna
+npm install
+```
+
+Sync web code into Capacitor + iOS project:
+
+```bash
+npm run cap:sync
+```
+
+Open in Xcode:
+
+```bash
+npm run ios:open
+```
+
+Then run on a real iPhone from Xcode. The game will use Capacitor native haptics when available.

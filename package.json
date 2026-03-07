@@ -1,0 +1,30 @@
+{
+  "name": "fidget-spinna",
+  "version": "1.0.0",
+  "description": "A minimal mobile web fidget spinner game built with Three.js.",
+  "main": "main.js",
+  "scripts": {
+    "sync:web": "cp index.html main.js style.css www/",
+    "cap:sync": "npm run sync:web && npx cap sync ios",
+    "ios:open": "npx cap open ios",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/franticnoise/fidget-spinna.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/franticnoise/fidget-spinna/issues"
+  },
+  "homepage": "https://github.com/franticnoise/fidget-spinna#readme",
+  "dependencies": {
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/haptics": "^8.0.1",
+    "@capacitor/ios": "^8.2.0"
+  }
+}
