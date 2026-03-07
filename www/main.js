@@ -4,7 +4,11 @@ const canvas = document.getElementById("app");
 const motionBtn = document.getElementById("motionBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsPanel = document.getElementById("settingsPanel");
-const fxDock = document.getElementById("fxDock");
+const modDock = document.getElementById("modDock");
+const fxModBtn = document.getElementById("fxModBtn");
+const modulationBtn = document.getElementById("modulationBtn");
+const fxModal = document.getElementById("fxModal");
+const modulationModal = document.getElementById("modulationModal");
 const statusEl = document.getElementById("status");
 const soundSourceSelect = document.getElementById("soundSourceSelect");
 const tempoInput = document.getElementById("tempoInput");
@@ -36,6 +40,16 @@ const stepsSlider = document.getElementById("stepsSlider");
 const stepsValue = document.getElementById("stepsValue");
 const pitchSemitoneSlider = document.getElementById("pitchSemitoneSlider");
 const pitchSemitoneValue = document.getElementById("pitchSemitoneValue");
+const lfoShapeSelect = document.getElementById("lfoShapeSelect");
+const lfoRateSelect = document.getElementById("lfoRateSelect");
+const lfoRateValue = document.getElementById("lfoRateValue");
+const lfoAmountSlider = document.getElementById("lfoAmountSlider");
+const lfoAmountValue = document.getElementById("lfoAmountValue");
+const lfoTargetSelect = document.getElementById("lfoTargetSelect");
+const modFilterTypeSelect = document.getElementById("modFilterTypeSelect");
+const modFilterTypeValue = document.getElementById("modFilterTypeValue");
+const modFilterCutoffSlider = document.getElementById("modFilterCutoffSlider");
+const modFilterCutoffValue = document.getElementById("modFilterCutoffValue");
 const isMobile = window.matchMedia("(pointer: coarse)").matches;
 
 let settingsOpen = false;
@@ -54,24 +68,72 @@ settingsPanel.addEventListener("pointerdown", (event) => {
   event.stopPropagation();
 });
 
-if (fxDock) {
+function setFxModalOpen(open) {
+  if (!fxModal) return;
+  fxModal.hidden = !open;
+}
+
+function setModulationModalOpen(open) {
+  if (!modulationModal) return;
+  modulationModal.hidden = !open;
+}
+
+if (fxModBtn) {
+  fxModBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const willOpen = fxModal ? fxModal.hidden : false;
+    setFxModalOpen(willOpen);
+    if (willOpen) {
+      setModulationModalOpen(false);
+    }
+  });
+}
+
+if (modulationBtn) {
+  modulationBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const willOpen = modulationModal ? modulationModal.hidden : false;
+    setModulationModalOpen(willOpen);
+    if (willOpen) {
+      setFxModalOpen(false);
+    }
+  });
+}
+
+if (modDock) {
   const blockSpinnerPropagation = (event) => {
     event.stopPropagation();
   };
-  fxDock.addEventListener("pointerdown", blockSpinnerPropagation);
-  fxDock.addEventListener("pointermove", blockSpinnerPropagation);
-  fxDock.addEventListener("pointerup", blockSpinnerPropagation);
-  fxDock.addEventListener("pointercancel", blockSpinnerPropagation);
+  modDock.addEventListener("pointerdown", blockSpinnerPropagation);
+  modDock.addEventListener("pointermove", blockSpinnerPropagation);
+  modDock.addEventListener("pointerup", blockSpinnerPropagation);
+  modDock.addEventListener("pointercancel", blockSpinnerPropagation);
+}
+
+if (fxModal) {
+  fxModal.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+}
+
+if (modulationModal) {
+  modulationModal.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
 }
 
 window.addEventListener("pointerdown", (event) => {
-  if (!settingsOpen) {
-    return;
+  const target = event.target;
+  if (settingsOpen && !settingsPanel.contains(target) && target !== settingsBtn) {
+    setSettingsOpen(false);
   }
 
-  const target = event.target;
-  if (!settingsPanel.contains(target) && target !== settingsBtn) {
-    setSettingsOpen(false);
+  if (fxModal && !fxModal.hidden && !fxModal.contains(target) && target !== fxModBtn) {
+    setFxModalOpen(false);
+  }
+
+  if (modulationModal && !modulationModal.hidden && !modulationModal.contains(target) && target !== modulationBtn) {
+    setModulationModalOpen(false);
   }
 });
 
@@ -178,9 +240,11 @@ function makeFidgetSpinner(stepCount = wingCount, scaleFactor = 1) {
 }
 
 const stabilizer = new THREE.Group();
+const mainSpinnerScale = 0.6;
+const bassScaleBase = 0.6;
 const mainSpinnerX = 0;
-const bassSpinnerX = 2.65;
-const bassScaleFactor = 0.72;
+const bassSpinnerX = 1.86;
+const bassScaleFactor = bassScaleBase * mainSpinnerScale;
 let pulleyMainRing = null;
 let pulleyBassRing = null;
 let pulleyTopBelt = null;
@@ -198,7 +262,7 @@ function getBassStepCount() {
 
 function makePulleyVisual() {
   const group = new THREE.Group();
-  pulleyMainRadius = getArmRadiusForSteps(wingCount, 1);
+  pulleyMainRadius = getArmRadiusForSteps(wingCount, mainSpinnerScale);
   pulleyBassRadius = getArmRadiusForSteps(getBassStepCount(), bassScaleFactor);
 
   pulleyMainRing = ring(pulleyMainRadius, 64, -0.02, softLineMaterial);
@@ -250,7 +314,7 @@ function updatePulleyVisual(mainY, bassY) {
   setPulleyLinePoints(pulleyBottomBelt, mainSpinnerX, mainY - pulleyMainRadius, bassSpinnerX, bassY - pulleyBassRadius);
 }
 
-let spinner = makeFidgetSpinner(wingCount, 1);
+let spinner = makeFidgetSpinner(wingCount, mainSpinnerScale);
 let bassSpinner = makeFidgetSpinner(getBassStepCount(), bassScaleFactor);
 let pulleyVisual = makePulleyVisual();
 spinner.position.x = mainSpinnerX;
@@ -408,7 +472,15 @@ function recoverStalePointers() {
 window.addEventListener("pointerdown", (event) => {
   recoverStalePointers();
 
-  if (fxDock && event.target instanceof Node && fxDock.contains(event.target)) {
+  if (modDock && event.target instanceof Node && modDock.contains(event.target)) {
+    return;
+  }
+
+  if (fxModal && !fxModal.hidden && event.target instanceof Node && fxModal.contains(event.target)) {
+    return;
+  }
+
+  if (modulationModal && !modulationModal.hidden && event.target instanceof Node && modulationModal.contains(event.target)) {
     return;
   }
 
@@ -646,6 +718,14 @@ let delaySendGain = null;
 let delayNode = null;
 let delayFeedbackGain = null;
 let delayWetGain = null;
+let lfoShape = lfoShapeSelect ? lfoShapeSelect.value : "square";
+let lfoRateDivision = THREE.MathUtils.clamp(Number(lfoRateSelect ? lfoRateSelect.value : 16), 4, 128);
+let lfoAmount = THREE.MathUtils.clamp(Number(lfoAmountSlider ? lfoAmountSlider.value : 0) / 100, 0, 1);
+let lfoTarget = lfoTargetSelect ? lfoTargetSelect.value : "amplitude";
+let modFilterType = modFilterTypeSelect ? modFilterTypeSelect.value : "lowpass";
+let modFilterCutoffHz = THREE.MathUtils.clamp(Number(modFilterCutoffSlider ? modFilterCutoffSlider.value : 12000), 120, 12000);
+let lastSampleHoldCycle = Number.NaN;
+let sampleHoldValue = 0;
 let tempoBpm = THREE.MathUtils.clamp(Number(tempoInput ? tempoInput.value : 120), 30, 280);
 let minArpRate = THREE.MathUtils.clamp(Number(minArpRateSelect ? minArpRateSelect.value : 8), 1, 256);
 let maxArpRate = THREE.MathUtils.clamp(Number(maxArpRateSelect ? maxArpRateSelect.value : 128), 1, 256);
@@ -699,6 +779,70 @@ function getDisplayedRootMidi() {
 
 function midiToFreq(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function getLfoRateHz() {
+  const quarterNotesPerSecond = tempoBpm / 60;
+  const noteLengthInQuarterNotes = 4 / Math.max(1, lfoRateDivision);
+  return quarterNotesPerSecond / noteLengthInQuarterNotes;
+}
+
+function getLfoValueAtTime(timeSec) {
+  const rateHz = Math.max(0.001, getLfoRateHz());
+  const phase = (timeSec * rateHz) % 1;
+
+  if (lfoShape === "sine") {
+    return Math.sin(phase * Math.PI * 2);
+  }
+
+  if (lfoShape === "triangle") {
+    return 1 - 4 * Math.abs(phase - 0.5);
+  }
+
+  if (lfoShape === "randomSH") {
+    const cycle = Math.floor(timeSec * rateHz);
+    if (cycle !== lastSampleHoldCycle) {
+      lastSampleHoldCycle = cycle;
+      sampleHoldValue = Math.random() * 2 - 1;
+    }
+    return sampleHoldValue;
+  }
+
+  return phase < 0.5 ? 1 : -1;
+}
+
+function getVoiceModulation(timeSec) {
+  const lfoValue = getLfoValueAtTime(timeSec);
+  let ampScale = 1;
+  let pitchRatio = 1;
+  let filterCutoffHz = modFilterCutoffHz;
+
+  if (lfoTarget === "amplitude") {
+    ampScale = THREE.MathUtils.clamp(1 + lfoValue * lfoAmount * 0.95, 0.05, 2);
+  } else if (lfoTarget === "pitch") {
+    const semitoneOffset = lfoValue * lfoAmount * 12;
+    pitchRatio = Math.pow(2, semitoneOffset / 12);
+  } else if (lfoTarget === "filterCutoff") {
+    filterCutoffHz = THREE.MathUtils.clamp(modFilterCutoffHz * (1 + lfoValue * lfoAmount * 0.95), 120, 12000);
+  }
+
+  return {
+    ampScale,
+    pitchRatio,
+    filterCutoffHz,
+  };
+}
+
+function createVoiceModFilter(timeSec) {
+  const mod = getVoiceModulation(timeSec);
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = modFilterType;
+  filter.frequency.setValueAtTime(mod.filterCutoffHz, timeSec);
+  filter.Q.setValueAtTime(modFilterType === "bandpass" ? 1.2 : 0.8, timeSec);
+  return {
+    filter,
+    mod,
+  };
 }
 
 function semitoneToNoteName(semitone) {
@@ -813,7 +957,7 @@ function rebuildNoteSprites() {
     stabilizer.add(rootNoteSprite);
   }
 
-  const armRadius = getArmRadiusForSteps(wingCount, 1);
+  const armRadius = getArmRadiusForSteps(wingCount, mainSpinnerScale);
   for (let i = 0; i < wingCount; i += 1) {
     const angle = (i / wingCount) * Math.PI * 2;
     const sprite = makeNoteSprite(wingAssignedLabels[i] || "-");
@@ -842,7 +986,7 @@ function rebuildSpinnerGeometry() {
   stabilizer.remove(spinner);
   stabilizer.remove(bassSpinner);
 
-  spinner = makeFidgetSpinner(wingCount, 1);
+  spinner = makeFidgetSpinner(wingCount, mainSpinnerScale);
   bassSpinner = makeFidgetSpinner(getBassStepCount(), bassScaleFactor);
   pulleyVisual = makePulleyVisual();
 
@@ -1176,6 +1320,24 @@ function updateFxLabels() {
   if (delayAmountValue) {
     delayAmountValue.textContent = `${Math.round(delayAmount * 100)}%`;
   }
+  if (lfoRateValue) {
+    lfoRateValue.textContent = `1/${lfoRateDivision}`;
+  }
+  if (lfoAmountValue) {
+    lfoAmountValue.textContent = `${Math.round(lfoAmount * 100)}%`;
+  }
+  if (modFilterTypeValue) {
+    if (modFilterType === "highpass") {
+      modFilterTypeValue.textContent = "HP";
+    } else if (modFilterType === "bandpass") {
+      modFilterTypeValue.textContent = "BP";
+    } else {
+      modFilterTypeValue.textContent = "LP";
+    }
+  }
+  if (modFilterCutoffValue) {
+    modFilterCutoffValue.textContent = `${Math.round(modFilterCutoffHz)}Hz`;
+  }
 }
 
 function roundToSliderStep(value, min, max, step) {
@@ -1262,7 +1424,7 @@ function enableFxContainerSwipe(containerEl, sliderEl) {
 }
 
 function setupFxContainerSwipes() {
-  const fxControls = document.querySelectorAll("#fxDock .fxControl");
+  const fxControls = document.querySelectorAll(".modModal .fxControl");
   fxControls.forEach((containerEl) => {
     const sliderEl = containerEl.querySelector('input[type="range"]');
     if (!sliderEl) {
@@ -1392,18 +1554,20 @@ function playMonotoneTick(speed) {
     const t = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
+    const voiceMod = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = midiToFreq(getDisplayedRootMidi() + 12);
 
     osc.type = "sine";
-    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.setValueAtTime(baseFreq * voiceMod.mod.pitchRatio, t);
 
     const release = envelopeReleaseSeconds;
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.010 + brightness * 0.010, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime((0.010 + brightness * 0.010) * voiceMod.mod.ampScale, t + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
 
-    osc.connect(gain);
+    osc.connect(voiceMod.filter);
+    voiceMod.filter.connect(gain);
     routeVoiceToMix(gain);
     osc.start(t);
     osc.stop(t + release + 0.01);
@@ -1430,14 +1594,15 @@ function playOcarinaTick(speed) {
     const formant = audioCtx.createBiquadFilter();
     const body = audioCtx.createBiquadFilter();
     const gain = audioCtx.createGain();
+    const voiceMod = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const noteFreq = getSoftToneFreq(speed);
     const release = THREE.MathUtils.clamp(envelopeReleaseSeconds * 1.35, 0.05, 0.7);
 
     pitchOsc.type = "sine";
     breathOsc.type = "triangle";
-    pitchOsc.frequency.setValueAtTime(noteFreq, t);
-    breathOsc.frequency.setValueAtTime(noteFreq * 1.01, t);
+    pitchOsc.frequency.setValueAtTime(noteFreq * voiceMod.mod.pitchRatio, t);
+    breathOsc.frequency.setValueAtTime(noteFreq * 1.01 * voiceMod.mod.pitchRatio, t);
 
     formant.type = "bandpass";
     formant.frequency.setValueAtTime(noteFreq * 2.4, t);
@@ -1448,13 +1613,14 @@ function playOcarinaTick(speed) {
     body.Q.setValueAtTime(0.8, t);
 
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.010 + brightness * 0.01, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime((0.010 + brightness * 0.01) * voiceMod.mod.ampScale, t + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
 
     pitchOsc.connect(formant);
     breathOsc.connect(formant);
     formant.connect(body);
-    body.connect(gain);
+    body.connect(voiceMod.filter);
+    voiceMod.filter.connect(gain);
     routeVoiceToMix(gain);
 
     pitchOsc.start(t);
@@ -1476,21 +1642,23 @@ function playArpTick(speed) {
     const osc = audioCtx.createOscillator();
     const sub = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
+    const voiceMod = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
 
     osc.type = "triangle";
     sub.type = "sine";
-    osc.frequency.setValueAtTime(baseFreq, t);
-    sub.frequency.setValueAtTime(baseFreq * 0.5, t);
+    osc.frequency.setValueAtTime(baseFreq * voiceMod.mod.pitchRatio, t);
+    sub.frequency.setValueAtTime(baseFreq * 0.5 * voiceMod.mod.pitchRatio, t);
 
     const release = envelopeReleaseSeconds;
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.013 + brightness * 0.01, t + 0.006);
+    gain.gain.exponentialRampToValueAtTime((0.013 + brightness * 0.01) * voiceMod.mod.ampScale, t + 0.006);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
 
-    osc.connect(gain);
-    sub.connect(gain);
+    osc.connect(voiceMod.filter);
+    sub.connect(voiceMod.filter);
+    voiceMod.filter.connect(gain);
     routeVoiceToMix(gain);
     osc.start(t);
     sub.start(t);
@@ -1600,6 +1768,7 @@ function playBassTick(speed) {
     const sub = audioCtx.createOscillator();
     const body = audioCtx.createBiquadFilter();
     const gain = audioCtx.createGain();
+    const voiceMod = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const pool = bassAssignedMidis.length ? bassAssignedMidis : [getDisplayedRootMidi() - 24, getDisplayedRootMidi() - 17];
     const baseIdx = ((bassStepIndex % pool.length) + pool.length) % pool.length;
@@ -1611,20 +1780,21 @@ function playBassTick(speed) {
 
     osc.type = "triangle";
     sub.type = "sine";
-    osc.frequency.setValueAtTime(bassFreq, t);
-    sub.frequency.setValueAtTime(bassFreq * 0.5, t);
+    osc.frequency.setValueAtTime(bassFreq * voiceMod.mod.pitchRatio, t);
+    sub.frequency.setValueAtTime(bassFreq * 0.5 * voiceMod.mod.pitchRatio, t);
 
     body.type = "lowpass";
     body.frequency.setValueAtTime(220 + brightness * 120, t);
     body.Q.setValueAtTime(0.9, t);
 
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.024 + brightness * 0.02, t + 0.015);
+    gain.gain.exponentialRampToValueAtTime((0.024 + brightness * 0.02) * voiceMod.mod.ampScale, t + 0.015);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
 
     osc.connect(body);
     sub.connect(body);
-    body.connect(gain);
+    body.connect(voiceMod.filter);
+    voiceMod.filter.connect(gain);
     routeVoiceToMix(gain);
     osc.start(t);
     sub.start(t);
@@ -1773,6 +1943,48 @@ if (delayAmountSlider) {
       delayFeedbackGain.gain.setTargetAtTime(delayAmount, audioCtx.currentTime, 0.02);
       delaySendGain.gain.setTargetAtTime(0.1 + delayAmount * 0.55, audioCtx.currentTime, 0.02);
     }
+    updateFxLabels();
+  });
+}
+
+if (lfoShapeSelect) {
+  lfoShapeSelect.addEventListener("change", () => {
+    lfoShape = lfoShapeSelect.value;
+    lastSampleHoldCycle = Number.NaN;
+  });
+}
+
+if (lfoRateSelect) {
+  lfoRateSelect.addEventListener("change", () => {
+    lfoRateDivision = THREE.MathUtils.clamp(Number(lfoRateSelect.value), 4, 128);
+    lastSampleHoldCycle = Number.NaN;
+    updateFxLabels();
+  });
+}
+
+if (lfoAmountSlider) {
+  lfoAmountSlider.addEventListener("input", () => {
+    lfoAmount = THREE.MathUtils.clamp(Number(lfoAmountSlider.value) / 100, 0, 1);
+    updateFxLabels();
+  });
+}
+
+if (lfoTargetSelect) {
+  lfoTargetSelect.addEventListener("change", () => {
+    lfoTarget = lfoTargetSelect.value;
+  });
+}
+
+if (modFilterTypeSelect) {
+  modFilterTypeSelect.addEventListener("change", () => {
+    modFilterType = modFilterTypeSelect.value;
+    updateFxLabels();
+  });
+}
+
+if (modFilterCutoffSlider) {
+  modFilterCutoffSlider.addEventListener("input", () => {
+    modFilterCutoffHz = THREE.MathUtils.clamp(Number(modFilterCutoffSlider.value), 120, 12000);
     updateFxLabels();
   });
 }

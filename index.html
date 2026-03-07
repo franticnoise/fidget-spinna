@@ -144,7 +144,12 @@
       </div>
     </div>
 
-    <div id="fxDock" aria-label="Audio effects controls">
+    <div id="modDock" aria-label="Modulation and FX modals">
+      <button id="fxModBtn" type="button">FX MOD</button>
+      <button id="modulationBtn" type="button">MODDULATION</button>
+    </div>
+
+    <div id="fxModal" class="modModal" hidden aria-label="FX MOD panel">
       <div class="fxControl">
         <div class="fxHeader"><label for="reverbDecaySlider">Reverb Decay</label><span id="reverbDecayValue">3.1s</span></div>
         <input id="reverbDecaySlider" type="range" min="0.2" max="10" step="0.1" value="3.1" />
@@ -168,6 +173,53 @@
       <div class="fxControl">
         <div class="fxHeader"><label for="pitchSemitoneSlider">Pitch</label><span id="pitchSemitoneValue">+0 st</span></div>
         <input id="pitchSemitoneSlider" type="range" min="-24" max="24" step="1" value="0" />
+      </div>
+    </div>
+
+    <div id="modulationModal" class="modModal" hidden aria-label="Modulation panel">
+      <div class="fxControl">
+        <div class="fxHeader"><label for="lfoShapeSelect">LFO Shape</label><span>Mode</span></div>
+        <select id="lfoShapeSelect">
+          <option value="sine">Sine</option>
+          <option value="triangle">Triangle</option>
+          <option value="square" selected>Square</option>
+          <option value="randomSH">Random S&amp;H</option>
+        </select>
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="lfoRateSelect">LFO Rate</label><span id="lfoRateValue">1/16</span></div>
+        <select id="lfoRateSelect">
+          <option value="4">1/4</option>
+          <option value="8">1/8</option>
+          <option value="16" selected>1/16</option>
+          <option value="32">1/32</option>
+          <option value="64">1/64</option>
+          <option value="128">1/128</option>
+        </select>
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="lfoAmountSlider">LFO Amount</label><span id="lfoAmountValue">0%</span></div>
+        <input id="lfoAmountSlider" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="lfoTargetSelect">Target Mod</label><span>Target</span></div>
+        <select id="lfoTargetSelect">
+          <option value="amplitude" selected>Amplitude</option>
+          <option value="pitch">Pitch</option>
+          <option value="filterCutoff">Filter Cutoff</option>
+        </select>
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="modFilterTypeSelect">Filter Type</label><span id="modFilterTypeValue">LP</span></div>
+        <select id="modFilterTypeSelect">
+          <option value="lowpass" selected>LP</option>
+          <option value="highpass">HP</option>
+          <option value="bandpass">BP</option>
+        </select>
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="modFilterCutoffSlider">Filter Cutoff</label><span id="modFilterCutoffValue">12000Hz</span></div>
+        <input id="modFilterCutoffSlider" type="range" min="120" max="12000" step="10" value="12000" />
       </div>
     </div>
 
