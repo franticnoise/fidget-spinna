@@ -16,81 +16,9 @@
       <div id="transportInline">
         <label for="tempoInput">Tempo</label>
         <input id="tempoInput" type="number" min="30" max="280" step="1" value="120" />
-        <button id="transportToggleBtn" type="button">Stop</button>
-      </div>
-      <p id="status">Tap and drag around center to spin.</p>
-
-      <div id="settingsPanel" hidden>
-        <div class="controlRow controlRowButtons">
-          <button id="motionBtn" type="button">Enable Motion</button>
-        </div>
-
-        <div class="controlRow">
-          <span>Root Note</span>
-          <select id="rootNoteSelect">
-            <option value="C">C</option>
-            <option value="C#">C#</option>
-            <option value="D">D</option>
-            <option value="D#">D#</option>
-            <option value="E">E</option>
-            <option value="F">F</option>
-            <option value="F#">F#</option>
-            <option value="G" selected>G</option>
-            <option value="G#">G#</option>
-            <option value="A">A</option>
-            <option value="A#">A#</option>
-            <option value="B">B</option>
-          </select>
-        </div>
-
-        <div class="controlRow">
-          <span>Scale</span>
-          <select id="scaleSelect">
-            <option value="minor">Minor</option>
-            <option value="major">Major</option>
-            <option value="harmonicMinor">Harmonic Minor</option>
-            <option value="dorian">Dorian</option>
-            <option value="minorPentatonic" selected>Minor Pentatonic</option>
-          </select>
-        </div>
-
-        <div class="controlRow controlRowSlider">
-          <span>Wing Count</span>
-          <input id="wingCountSlider" type="range" min="3" max="9" step="1" value="6" />
-          <span id="wingCountValue">6</span>
-        </div>
-
-        <div class="controlRow controlRowSlider">
-          <span>Octave Range</span>
-          <input id="octaveRangeSlider" type="range" min="0" max="4" step="1" value="2" />
-          <span id="octaveRangeValue">+/-2</span>
-        </div>
-
-        <div class="controlRow controlRowSlider">
-          <span>Base Octave</span>
-          <input id="baseOctaveSlider" type="range" min="-4" max="4" step="1" value="0" />
-          <span id="baseOctaveValue">+0</span>
-        </div>
-
-        <div class="controlRow controlRowSlider">
-          <span>Bass Pitch</span>
-          <input id="bassPitchSlider" type="range" min="-24" max="24" step="1" value="-12" />
-          <span id="bassPitchValue">-12 st</span>
-        </div>
-
-        <div class="controlRow">
-          <span>Arp Direction</span>
-          <select id="arpDirectionSelect">
-            <option value="upDown">Up Down</option>
-            <option value="downUp">Down Up</option>
-            <option value="upOnly" selected>Only Up</option>
-            <option value="downOnly">Only Down</option>
-            <option value="random">Random</option>
-          </select>
-        </div>
-
-        <div class="controlRow">
-          <span>Min Arp Rate</span>
+        
+         <label for="minArpRateSelect">Arp Rate</label>
+      
           <select id="minArpRateSelect">
             <option value="1">1/1</option>
             <option value="2">1/2</option>
@@ -102,10 +30,11 @@
             <option value="128">1/128</option>
             <option value="256">1/256</option>
           </select>
-        </div>
 
-        <div class="controlRow">
-          <span>Max Arp Rate</span>
+        
+        <button id="transportToggleBtn" type="button" aria-label="Stop">&#9632;</button>
+        
+        <label for="maxArpRateSelect">Max Speed</label>
           <select id="maxArpRateSelect">
             <option value="1">1/1</option>
             <option value="2">1/2</option>
@@ -117,6 +46,14 @@
             <option value="128" selected>1/128</option>
             <option value="256">1/256</option>
           </select>
+         
+       
+      </div>
+      <p id="status">Tap and drag around center to spin.</p>
+
+      <div id="settingsPanel" hidden>
+        <div class="controlRow controlRowButtons">
+          <button id="motionBtn" type="button">Enable Motion</button>
         </div>
 
         <div class="controlRow">
@@ -143,13 +80,145 @@
             <span class="slider"></span>
           </label>
         </div>
+
+        <div class="controlRow controlRowSlider">
+          <span>Volume</span>
+          <input id="volumeSlider" type="range" min="0" max="100" step="1" value="100" />
+          <span id="volumeValue">100%</span>
+        </div>
+      </div>
+
+      <div id="arpPanel" class="modModal" hidden aria-label="ARP panel">
+        <div class="fxControl">
+          <div class="fxHeader"><label for="rootNoteSelect">Root Note</label><span>Scale</span></div>
+          <select id="rootNoteSelect">
+            <option value="C">C</option>
+            <option value="C#">C#</option>
+            <option value="D">D</option>
+            <option value="D#">D#</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="F#">F#</option>
+            <option value="G" selected>G</option>
+            <option value="G#">G#</option>
+            <option value="A">A</option>
+            <option value="A#">A#</option>
+            <option value="B">B</option>
+          </select>
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="scaleSelect">Scale</label><span>Mode</span></div>
+          <select id="scaleSelect">
+            <option value="minor">Minor</option>
+            <option value="major">Major</option>
+            <option value="harmonicMinor">Harmonic Minor</option>
+            <option value="dorian">Dorian</option>
+            <option value="minorPentatonic" selected>Minor Pentatonic</option>
+          </select>
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="wingCountSlider">Wing Count</label><span id="wingCountValue">6</span></div>
+          <input id="wingCountSlider" type="range" min="3" max="9" step="1" value="6" />
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="octaveRangeSlider">Octave Range</label><span id="octaveRangeValue">+/-2</span></div>
+          <input id="octaveRangeSlider" type="range" min="0" max="10" step="1" value="2" />
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="baseOctaveSlider">Base Octave</label><span id="baseOctaveValue">+0</span></div>
+          <input id="baseOctaveSlider" type="range" min="-4" max="4" step="1" value="0" />
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="arpDirectionSelect">Arp Direction</label><span>Mode</span></div>
+          <select id="arpDirectionSelect">
+            <option value="upDown">Up Down</option>
+            <option value="downUp">Down Up</option>
+            <option value="upOnly" selected>Only Up</option>
+            <option value="downOnly">Only Down</option>
+            <option value="random">Random</option>
+          </select>
+        </div>
+
+       
       </div>
     </div>
 
     <div id="modDock" aria-label="Modulation and FX modals">
       <button id="settingsBtn" type="button">SETTINGS</button>
+      <button id="arpBtn" type="button">ARP</button>
+      <button id="bassBtn" type="button">BASS</button>
       <button id="fxModBtn" type="button">FX MOD</button>
-      <button id="modulationBtn" type="button">MODDULATION</button>
+      <button id="modulationBtn" type="button">MODULATION</button>
+    </div>
+
+    <div id="bassPanel" class="modModal" hidden aria-label="Bass panel">
+      <div class="bassRow">
+        <div class="fxControl" id="bassEngineControl">
+          <div class="fxHeader"><label for="bassEngineToggle">Bass Engine</label><span>Power</span></div>
+          <label class="switch" for="bassEngineToggle">
+            <input id="bassEngineToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="fxControl" id="bassInvertScaleControl">
+          <div class="fxHeader"><label for="bassInvertScaleToggle">Invert Scale</label><span>Order</span></div>
+          <label class="switch" for="bassInvertScaleToggle">
+            <input id="bassInvertScaleToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bassRow">
+        <div class="fxControl" id="bassToneLockControl">
+          <div class="fxHeader"><label for="bassLockToneToggle">Locked Tone</label><span>Pitch Lock</span></div>
+          <label class="switch" for="bassLockToneToggle">
+            <input id="bassLockToneToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="fxControl" id="bassPitchControl">
+          <div class="fxHeader"><label for="bassPitchSlider">Bass Pitch</label><span id="bassPitchValue">-12 st</span></div>
+          <input id="bassPitchSlider" type="range" min="-24" max="24" step="1" value="-12" />
+        </div>
+      </div>
+
+      <div class="bassRow">
+        <div class="fxControl" id="bassStepLockControl">
+          <div class="fxHeader"><label for="bassLockStepsToggle">Locked Steps</label><span>Half Main</span></div>
+          <label class="switch" for="bassLockStepsToggle">
+            <input id="bassLockStepsToggle" type="checkbox" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="fxControl" id="bassStepsControl">
+          <div class="fxHeader"><label for="bassStepsSlider">Bass Steps</label><span id="bassStepsValue">3</span></div>
+          <input id="bassStepsSlider" type="range" min="3" max="9" step="1" value="3" />
+        </div>
+      </div>
+
+      <div class="bassRow">
+        <div class="fxControl" id="bassReleaseLockControl">
+          <div class="fxHeader"><label for="bassLockReleaseToggle">Locked Release</label><span>Main Env</span></div>
+          <label class="switch" for="bassLockReleaseToggle">
+            <input id="bassLockReleaseToggle" type="checkbox" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="fxControl" id="bassReleaseControl">
+          <div class="fxHeader"><label for="bassEnvReleaseSlider">Bass Amp Release</label><span id="bassEnvReleaseValue">310ms</span></div>
+          <input id="bassEnvReleaseSlider" type="range" min="0.03" max="1.2" step="0.01" value="0.31" />
+        </div>
+      </div>
     </div>
 
     <div id="fxModal" class="modModal" hidden aria-label="FX MOD panel">
@@ -163,7 +232,7 @@
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="delayTimeSlider">Delay Time</label><span id="delayTimeValue">60ms</span></div>
-        <input id="delayTimeSlider" type="range" min="0.008" max="0.06" step="0.001" value="0.06" />
+        <input id="delayTimeSlider" type="range" min="0" max="0.2" step="0.001" value="0.06" />
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="delayAmountSlider">Delay Amount</label><span id="delayAmountValue">62%</span></div>
@@ -186,12 +255,17 @@
           <option value="sine">Sine</option>
           <option value="triangle">Triangle</option>
           <option value="square" selected>Square</option>
+          <option value="rampUp">Ramp Up</option>
+          <option value="rampDown">Ramp Down</option>
           <option value="randomSH">Random S&amp;H</option>
         </select>
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoRateSelect">LFO Rate</label><span id="lfoRateValue">1/16</span></div>
         <select id="lfoRateSelect">
+          <option value="0.5">2/1</option>
+          <option value="1">1/1</option>
+          <option value="2">1/2</option>
           <option value="4">1/4</option>
           <option value="8">1/8</option>
           <option value="16" selected>1/16</option>
@@ -210,6 +284,7 @@
           <option value="amplitude" selected>Amplitude</option>
           <option value="pitch">Pitch</option>
           <option value="filterCutoff">Filter Cutoff</option>
+          <option value="ampRelease">Amp Release</option>
         </select>
       </div>
       <div class="fxControl">
@@ -227,6 +302,7 @@
     </div>
 
     <canvas id="app"></canvas>
+    <div id="spinnerNoteLayer" aria-hidden="true"></div>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
