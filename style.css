@@ -146,6 +146,7 @@ body {
   padding: 8px 14px;
   font-weight: 600;
   letter-spacing: 0.03em;
+  min-width: 160px;
 }
 
 #motionBtn:active {
@@ -154,14 +155,7 @@ body {
 
 #settingsBtn {
   pointer-events: auto;
-  margin-left: 8px;
-  border: 1px solid rgba(118, 221, 255, 0.8);
-  background: rgba(5, 17, 26, 0.55);
-  color: #d3f6ff;
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin-left: 0;
 }
 
 #settingsBtn:active {

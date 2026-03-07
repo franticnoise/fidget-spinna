@@ -59,10 +59,21 @@ function setSettingsOpen(open) {
   settingsPanel.hidden = !open;
 }
 
-settingsBtn.addEventListener("click", (event) => {
-  event.stopPropagation();
-  setSettingsOpen(!settingsOpen);
-});
+function targetInside(target, element) {
+  return !!(target instanceof Node && element && element.contains(target));
+}
+
+if (settingsBtn) {
+  settingsBtn.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+    const willOpen = !settingsOpen;
+    setSettingsOpen(willOpen);
+    if (willOpen) {
+      setFxModalOpen(false);
+      setModulationModalOpen(false);
+    }
+  });
+}
 
 settingsPanel.addEventListener("pointerdown", (event) => {
   event.stopPropagation();
@@ -79,23 +90,25 @@ function setModulationModalOpen(open) {
 }
 
 if (fxModBtn) {
-  fxModBtn.addEventListener("click", (event) => {
+  fxModBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
     const willOpen = fxModal ? fxModal.hidden : false;
     setFxModalOpen(willOpen);
     if (willOpen) {
       setModulationModalOpen(false);
+      setSettingsOpen(false);
     }
   });
 }
 
 if (modulationBtn) {
-  modulationBtn.addEventListener("click", (event) => {
+  modulationBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
     const willOpen = modulationModal ? modulationModal.hidden : false;
     setModulationModalOpen(willOpen);
     if (willOpen) {
       setFxModalOpen(false);
+      setSettingsOpen(false);
     }
   });
 }
@@ -124,18 +137,22 @@ if (modulationModal) {
 
 window.addEventListener("pointerdown", (event) => {
   const target = event.target;
-  if (settingsOpen && !settingsPanel.contains(target) && target !== settingsBtn) {
+  if (settingsOpen && !targetInside(target, settingsPanel) && !targetInside(target, settingsBtn)) {
     setSettingsOpen(false);
   }
 
-  if (fxModal && !fxModal.hidden && !fxModal.contains(target) && target !== fxModBtn) {
+  if (fxModal && !fxModal.hidden && !targetInside(target, fxModal) && !targetInside(target, fxModBtn)) {
     setFxModalOpen(false);
   }
 
-  if (modulationModal && !modulationModal.hidden && !modulationModal.contains(target) && target !== modulationBtn) {
+  if (modulationModal && !modulationModal.hidden && !targetInside(target, modulationModal) && !targetInside(target, modulationBtn)) {
     setModulationModalOpen(false);
   }
 });
+
+setSettingsOpen(false);
+setFxModalOpen(false);
+setModulationModalOpen(false);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
@@ -659,6 +676,13 @@ window.addEventListener("orientationchange", updateScreenOrientation);
 
 let motionEnabled = false;
 
+function updateMotionButtonUi() {
+  if (!motionBtn) {
+    return;
+  }
+  motionBtn.textContent = motionEnabled ? "Disable Motion" : "Enable Motion";
+}
+
 async function enableMotion() {
   if (motionEnabled) {
     return;
@@ -688,7 +712,7 @@ async function enableMotion() {
     window.addEventListener("deviceorientation", handleOrientation, true);
     motionEnabled = true;
     neutralQuat.copy(deviceQuat);
-    motionBtn.hidden = true;
+    updateMotionButtonUi();
     statusEl.textContent = "Motion enabled: tilt controls delay time, delay amount, and release.";
   } catch (err) {
     statusEl.textContent = "Motion unavailable on this device/browser.";
@@ -696,7 +720,30 @@ async function enableMotion() {
   }
 }
 
-motionBtn.addEventListener("click", enableMotion);
+function disableMotion() {
+  if (!motionEnabled) {
+    return;
+  }
+
+  window.removeEventListener("deviceorientation", handleOrientation, true);
+  motionEnabled = false;
+  deviceQuat.identity();
+  neutralQuat.identity();
+  targetQuat.identity();
+  correctedEuler.set(0, 0, 0);
+  updateMotionButtonUi();
+  statusEl.textContent = "Motion disabled: manual spin control restored.";
+}
+
+async function toggleMotion() {
+  if (motionEnabled) {
+    disableMotion();
+    return;
+  }
+  await enableMotion();
+}
+
+updateMotionButtonUi();
 
 let audioCtx = null;
 let audioReady = false;
@@ -1905,11 +1952,18 @@ window.addEventListener("pointerdown", () => {
   }
 });
 
-motionBtn.addEventListener("click", () => {
-  unlockAudio().catch(() => {
-    statusEl.textContent = "Audio blocked by browser. Keep interacting to enable sound.";
+if (motionBtn) {
+  motionBtn.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+    unlockAudio().catch(() => {
+      statusEl.textContent = "Audio blocked by browser. Keep interacting to enable sound.";
+    });
+
+    toggleMotion().catch(() => {
+      statusEl.textContent = "Motion unavailable on this device/browser.";
+    });
   });
-});
+}
 
 if (reverbDecaySlider) {
   reverbDecaySlider.addEventListener("input", () => {

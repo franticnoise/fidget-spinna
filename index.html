@@ -13,8 +13,6 @@
     <div id="hud">
       <h1>Fidget Spinna</h1>
       <p>Spin with your thumb. Hold center and drag up/down to shift key.</p>
-      <button id="motionBtn" type="button">Enable Motion</button>
-      <button id="settingsBtn" type="button"><span aria-hidden="true">&#9881;</span> Settings</button>
       <div id="transportInline">
         <label for="tempoInput">Tempo</label>
         <input id="tempoInput" type="number" min="30" max="280" step="1" value="120" />
@@ -23,6 +21,10 @@
       <p id="status">Tap and drag around center to spin.</p>
 
       <div id="settingsPanel" hidden>
+        <div class="controlRow controlRowButtons">
+          <button id="motionBtn" type="button">Enable Motion</button>
+        </div>
+
         <div class="controlRow">
           <span>Root Note</span>
           <select id="rootNoteSelect">
@@ -145,6 +147,7 @@
     </div>
 
     <div id="modDock" aria-label="Modulation and FX modals">
+      <button id="settingsBtn" type="button">SETTINGS</button>
       <button id="fxModBtn" type="button">FX MOD</button>
       <button id="modulationBtn" type="button">MODDULATION</button>
     </div>
