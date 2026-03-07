@@ -1563,7 +1563,7 @@ function playMonotoneTick(speed) {
 
     const release = envelopeReleaseSeconds;
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime((0.010 + brightness * 0.010) * voiceMod.mod.ampScale, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime((0.01 + brightness * 0.01) * voiceMod.mod.ampScale, t + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
 
     osc.connect(voiceMod.filter);
@@ -1613,7 +1613,7 @@ function playOcarinaTick(speed) {
     body.Q.setValueAtTime(0.8, t);
 
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime((0.010 + brightness * 0.01) * voiceMod.mod.ampScale, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime((0.01 + brightness * 0.01) * voiceMod.mod.ampScale, t + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
 
     pitchOsc.connect(formant);
