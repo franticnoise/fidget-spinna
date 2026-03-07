@@ -247,7 +247,8 @@ body {
 #octaveRangeValue,
 #wingCountValue,
 #stepsValue,
-#pitchSemitoneValue {
+#pitchSemitoneValue,
+#bassPitchValue {
   min-width: 34px;
   text-align: right;
   font-size: 0.7rem;

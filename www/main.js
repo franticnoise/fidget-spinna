@@ -21,6 +21,8 @@ const octaveRangeSlider = document.getElementById("octaveRangeSlider");
 const octaveRangeValue = document.getElementById("octaveRangeValue");
 const baseOctaveSlider = document.getElementById("baseOctaveSlider");
 const baseOctaveValue = document.getElementById("baseOctaveValue");
+const bassPitchSlider = document.getElementById("bassPitchSlider");
+const bassPitchValue = document.getElementById("bassPitchValue");
 const arpDirectionSelect = document.getElementById("arpDirectionSelect");
 const reverbDecaySlider = document.getElementById("reverbDecaySlider");
 const reverbDecayValue = document.getElementById("reverbDecayValue");
@@ -179,6 +181,12 @@ const stabilizer = new THREE.Group();
 const mainSpinnerX = 0;
 const bassSpinnerX = 2.65;
 const bassScaleFactor = 0.72;
+let pulleyMainRing = null;
+let pulleyBassRing = null;
+let pulleyTopBelt = null;
+let pulleyBottomBelt = null;
+let pulleyMainRadius = 0;
+let pulleyBassRadius = 0;
 
 function getBassStepCount() {
   // Map main steps to a smaller bass lane: 2..5 steps.
@@ -190,28 +198,56 @@ function getBassStepCount() {
 
 function makePulleyVisual() {
   const group = new THREE.Group();
-  const mainR = getArmRadiusForSteps(wingCount, 1);
-  const bassR = getArmRadiusForSteps(getBassStepCount(), bassScaleFactor);
+  pulleyMainRadius = getArmRadiusForSteps(wingCount, 1);
+  pulleyBassRadius = getArmRadiusForSteps(getBassStepCount(), bassScaleFactor);
 
-  const mainRing = ring(mainR, 64, -0.02, softLineMaterial);
-  mainRing.position.set(mainSpinnerX, 0, 0);
-  const bassRing = ring(bassR, 64, -0.02, softLineMaterial);
-  bassRing.position.set(bassSpinnerX, 0, 0);
-  group.add(mainRing);
-  group.add(bassRing);
+  pulleyMainRing = ring(pulleyMainRadius, 64, -0.02, softLineMaterial);
+  pulleyMainRing.position.set(mainSpinnerX, 0, 0);
+  pulleyBassRing = ring(pulleyBassRadius, 64, -0.02, softLineMaterial);
+  pulleyBassRing.position.set(bassSpinnerX, 0, 0);
+  group.add(pulleyMainRing);
+  group.add(pulleyBassRing);
 
   const topBelt = [
-    new THREE.Vector3(mainSpinnerX, mainR, -0.02),
-    new THREE.Vector3(bassSpinnerX, bassR, -0.02),
+    new THREE.Vector3(mainSpinnerX, pulleyMainRadius, -0.02),
+    new THREE.Vector3(bassSpinnerX, pulleyBassRadius, -0.02),
   ];
   const bottomBelt = [
-    new THREE.Vector3(mainSpinnerX, -mainR, -0.02),
-    new THREE.Vector3(bassSpinnerX, -bassR, -0.02),
+    new THREE.Vector3(mainSpinnerX, -pulleyMainRadius, -0.02),
+    new THREE.Vector3(bassSpinnerX, -pulleyBassRadius, -0.02),
   ];
-  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(topBelt), softLineMaterial));
-  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bottomBelt), softLineMaterial));
+  pulleyTopBelt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(topBelt), softLineMaterial);
+  pulleyBottomBelt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(bottomBelt), softLineMaterial);
+  group.add(pulleyTopBelt);
+  group.add(pulleyBottomBelt);
 
   return group;
+}
+
+function setPulleyLinePoints(line, ax, ay, bx, by) {
+  if (!line || !line.geometry || !line.geometry.attributes.position) {
+    return;
+  }
+
+  const arr = line.geometry.attributes.position.array;
+  arr[0] = ax;
+  arr[1] = ay;
+  arr[2] = -0.02;
+  arr[3] = bx;
+  arr[4] = by;
+  arr[5] = -0.02;
+  line.geometry.attributes.position.needsUpdate = true;
+}
+
+function updatePulleyVisual(mainY, bassY) {
+  if (!pulleyMainRing || !pulleyBassRing || !pulleyTopBelt || !pulleyBottomBelt) {
+    return;
+  }
+
+  pulleyMainRing.position.set(mainSpinnerX, mainY, 0);
+  pulleyBassRing.position.set(bassSpinnerX, bassY, 0);
+  setPulleyLinePoints(pulleyTopBelt, mainSpinnerX, mainY + pulleyMainRadius, bassSpinnerX, bassY + pulleyBassRadius);
+  setPulleyLinePoints(pulleyBottomBelt, mainSpinnerX, mainY - pulleyMainRadius, bassSpinnerX, bassY - pulleyBassRadius);
 }
 
 let spinner = makeFidgetSpinner(wingCount, 1);
@@ -651,9 +687,11 @@ let wingAssignedMidis = [];
 let wingAssignedLabels = [];
 let bassAssignedMidis = [];
 let bassStepIndex = 0;
+let bassRootMidi = 0;
 let rootNoteSprite = null;
 let wingNoteSprites = [];
 let pitchSemitoneOffset = THREE.MathUtils.clamp(Number(pitchSemitoneSlider ? pitchSemitoneSlider.value : 0), -24, 24);
+let bassPitchOffset = THREE.MathUtils.clamp(Number(bassPitchSlider ? bassPitchSlider.value : -12), -24, 24);
 
 function getDisplayedRootMidi() {
   return currentRootMidi + pitchSemitoneOffset;
@@ -740,11 +778,27 @@ function buildBassNotesFromScale() {
   const bassStepCount = getBassStepCount();
   const notes = [];
   const displayedRootMidi = getDisplayedRootMidi();
+  const targetBassMidi = displayedRootMidi + bassPitchOffset;
+
+  let bestBass = displayedRootMidi - 24;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let octave = -6; octave <= 2; octave += 1) {
+    const octaveOffset = octave * 12;
+    for (let i = 0; i < scale.length; i += 1) {
+      const cand = displayedRootMidi + scale[i] + octaveOffset;
+      const dist = Math.abs(cand - targetBassMidi);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestBass = cand;
+      }
+    }
+  }
+  bassRootMidi = bestBass;
 
   for (let i = 0; i < bassStepCount; i += 1) {
     const idx = i % scale.length;
     const octaveLift = Math.floor(i / scale.length) * 12;
-    notes.push(displayedRootMidi - 24 + scale[idx] + octaveLift);
+    notes.push(bassRootMidi + scale[idx] + octaveLift);
   }
 
   return notes;
@@ -781,7 +835,8 @@ function refreshWingAssignments() {
 }
 
 function rebuildSpinnerGeometry() {
-  const y = spinner.position.y;
+  const yMain = spinner.position.y;
+  const yBass = bassSpinner.position.y;
   clearNoteSprites();
   stabilizer.remove(pulleyVisual);
   stabilizer.remove(spinner);
@@ -792,13 +847,14 @@ function rebuildSpinnerGeometry() {
   pulleyVisual = makePulleyVisual();
 
   spinner.position.x = mainSpinnerX;
-  spinner.position.y = y;
+  spinner.position.y = yMain;
   bassSpinner.position.x = bassSpinnerX;
-  bassSpinner.position.y = y;
+  bassSpinner.position.y = yBass;
 
   stabilizer.add(pulleyVisual);
   stabilizer.add(spinner);
   stabilizer.add(bassSpinner);
+  updatePulleyVisual(spinner.position.y, bassSpinner.position.y);
   rebuildNoteSprites();
 }
 
@@ -1029,6 +1085,17 @@ if (baseOctaveSlider && baseOctaveValue) {
 
   baseOctaveSlider.addEventListener("input", updateBaseOctaveUi);
   updateBaseOctaveUi();
+}
+
+if (bassPitchSlider && bassPitchValue) {
+  const updateBassPitchUi = () => {
+    bassPitchOffset = THREE.MathUtils.clamp(Number(bassPitchSlider.value), -24, 24);
+    bassPitchValue.textContent = `${bassPitchOffset >= 0 ? "+" : ""}${bassPitchOffset} st`;
+    refreshWingAssignments();
+  };
+
+  bassPitchSlider.addEventListener("input", updateBassPitchUi);
+  updateBassPitchUi();
 }
 
 if (arpDirectionSelect) {
@@ -1621,7 +1688,10 @@ function animate() {
   const octaveVisualOffset = THREE.MathUtils.clamp(rootOctaveOffset, -4, 4) * 0.42;
   const targetSpinnerY = octaveVisualOffset + shiftDragOffsetY;
   spinner.position.y = THREE.MathUtils.lerp(spinner.position.y, targetSpinnerY, 0.18);
-  bassSpinner.position.y = spinner.position.y;
+  const bassRelativeOctave = THREE.MathUtils.clamp((bassRootMidi - getDisplayedRootMidi()) / 12, -4, 4);
+  const targetBassY = bassRelativeOctave * 0.34;
+  bassSpinner.position.y = THREE.MathUtils.lerp(bassSpinner.position.y, targetBassY, 0.14);
+  updatePulleyVisual(spinner.position.y, bassSpinner.position.y);
 
   targetQuat.copy(deviceQuat).invert();
   targetQuat.premultiply(neutralQuat);
