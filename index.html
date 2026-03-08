@@ -13,42 +13,6 @@
     <div id="hud">
       <h1>Fidget Spinna</h1>
       <p>Spin with your thumb. Hold center and drag up/down to shift key.</p>
-      <div id="transportInline">
-        <label for="tempoInput">Tempo</label>
-        <input id="tempoInput" type="number" min="30" max="280" step="1" value="120" />
-        
-         <label for="minArpRateSelect">Arp Rate</label>
-      
-          <select id="minArpRateSelect">
-            <option value="1">1/1</option>
-            <option value="2">1/2</option>
-            <option value="4">1/4</option>
-            <option value="8" selected>1/8</option>
-            <option value="16">1/16</option>
-            <option value="32">1/32</option>
-            <option value="64">1/64</option>
-            <option value="128">1/128</option>
-            <option value="256">1/256</option>
-          </select>
-
-        
-        <button id="transportToggleBtn" type="button" aria-label="Stop">&#9632;</button>
-        
-        <label for="maxArpRateSelect">Max Speed</label>
-          <select id="maxArpRateSelect">
-            <option value="1">1/1</option>
-            <option value="2">1/2</option>
-            <option value="4">1/4</option>
-            <option value="8">1/8</option>
-            <option value="16">1/16</option>
-            <option value="32">1/32</option>
-            <option value="64">1/64</option>
-            <option value="128" selected>1/128</option>
-            <option value="256">1/256</option>
-          </select>
-         
-       
-      </div>
       <p id="status">Tap and drag around center to spin.</p>
 
       <div id="settingsPanel" hidden>
@@ -62,6 +26,15 @@
             <option value="arp" selected>Arpeggiator</option>
             <option value="monotone">Monotone</option>
             <option value="ocarina">Ocarina</option>
+            <option value="waveSine">Sine Wave</option>
+            <option value="waveTriangle">Triangle Wave</option>
+            <option value="waveSaw">Saw Wave</option>
+            <option value="waveSquare">Square Wave</option>
+            <option value="wavePulse">Pulse Wave</option>
+            <option value="waveSupersaw">Supersaw Stack</option>
+            <option value="waveFmBell">FM Bell</option>
+            <option value="wavePluck">Pluck</option>
+            <option value="waveNoise">Noise Perc</option>
           </select>
         </div>
 
@@ -112,9 +85,19 @@
           <select id="scaleSelect">
             <option value="minor">Minor</option>
             <option value="major">Major</option>
-            <option value="harmonicMinor">Harmonic Minor</option>
+            <option value="harmonicMinor" selected>Harmonic Minor</option>
+            <option value="melodicMinor">Melodic Minor</option>
             <option value="dorian">Dorian</option>
-            <option value="minorPentatonic" selected>Minor Pentatonic</option>
+            <option value="phrygian">Phrygian</option>
+            <option value="lydian">Lydian</option>
+            <option value="mixolydian">Mixolydian</option>
+            <option value="locrian">Locrian</option>
+            <option value="minorPentatonic">Minor Pentatonic</option>
+            <option value="majorPentatonic">Major Pentatonic</option>
+            <option value="blues">Blues</option>
+            <option value="wholeTone">Whole Tone</option>
+            <option value="diminished">Diminished (WH)</option>
+            <option value="chromatic">Chromatic</option>
           </select>
         </div>
 
@@ -149,11 +132,117 @@
     </div>
 
     <div id="modDock" aria-label="Modulation and FX modals">
-      <button id="settingsBtn" type="button">SETTINGS</button>
+      <button id="settingsBtn" type="button" aria-label="Settings">&#9881;</button>
       <button id="arpBtn" type="button">ARP</button>
       <button id="bassBtn" type="button">BASS</button>
       <button id="fxModBtn" type="button">FX MOD</button>
-      <button id="modulationBtn" type="button">MODULATION</button>
+      <button id="filterBtn" type="button">FILTER</button>
+      <button id="mod1Btn" type="button">LFO1</button>
+      <button id="mod2Btn" type="button">LFO2</button>
+    </div>
+
+    <div id="transportInline">
+      <label for="tempoInput">Tempo</label>
+      <input id="tempoInput" type="number" min="30" max="280" step="1" value="120" />
+      <label for="minArpRateSelect">Arp Rate</label>
+      <select id="minArpRateSelect">
+        <option value="1">1/1</option>
+        <option value="2">1/2</option>
+        <option value="4">1/4</option>
+        <option value="8" selected>1/8</option>
+        <option value="16">1/16</option>
+        <option value="32">1/32</option>
+        <option value="64">1/64</option>
+        <option value="128">1/128</option>
+        <option value="256">1/256</option>
+      </select>
+      <button id="transportToggleBtn" type="button" aria-label="Stop">&#9632;</button>
+      <label for="maxArpRateSelect">Max Speed</label>
+      <select id="maxArpRateSelect">
+        <option value="1">1/1</option>
+        <option value="2">1/2</option>
+        <option value="4">1/4</option>
+        <option value="8">1/8</option>
+        <option value="16">1/16</option>
+        <option value="32">1/32</option>
+        <option value="64">1/64</option>
+        <option value="128" selected>1/128</option>
+        <option value="256">1/256</option>
+      </select>
+    </div>
+
+    <div id="filterModal" class="modModal" hidden aria-label="Filter panel">
+      <div class="filterColumn">
+        <div class="fxControl">
+          <div class="fxHeader"><label for="filter1FreqSlider">Filter 1 Frequency</label><span id="filter1FreqValue">12000Hz</span></div>
+          <input id="filter1FreqSlider" type="range" min="40" max="16000" step="1" value="12000" />
+        </div>
+        <div class="fxControl">
+          <div class="fxHeader"><label for="filter1ResSlider">Filter 1 Resonance</label><span id="filter1ResValue">0.80</span></div>
+          <input id="filter1ResSlider" type="range" min="0.1" max="20" step="0.1" value="0.8" />
+        </div>
+        <div class="fxControl filterTypeDepthRow">
+          <div class="filterTypeDepthCell">
+            <div class="fxHeader"><label for="filter1TypeSelect">Filter 1 Type</label><span id="filter1TypeValue">LP</span></div>
+            <select id="filter1TypeSelect">
+              <option value="lowpass" selected>Lowpass</option>
+              <option value="highpass">Highpass</option>
+              <option value="bandpass">Bandpass</option>
+              <option value="notch">Notch</option>
+              <option value="allpass">Allpass</option>
+              <option value="peaking">Peaking</option>
+              <option value="lowshelf">Low Shelf</option>
+              <option value="highshelf">High Shelf</option>
+              <option value="combPlus">Comb +</option>
+              <option value="combMinus">Comb -</option>
+            </select>
+          </div>
+          <div class="filterTypeDepthCell">
+            <div class="fxHeader"><label for="filter1DepthSelect">Filter Depth</label><span id="filter1DepthValue">16dB</span></div>
+            <select id="filter1DepthSelect">
+              <option value="16" selected>16dB</option>
+              <option value="24">24dB</option>
+              <option value="48">48dB</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="filterColumn">
+        <div class="fxControl">
+          <div class="fxHeader"><label for="filter2FreqSlider">Filter 2 Frequency</label><span id="filter2FreqValue">12000Hz</span></div>
+          <input id="filter2FreqSlider" type="range" min="40" max="16000" step="1" value="12000" />
+        </div>
+        <div class="fxControl">
+          <div class="fxHeader"><label for="filter2ResSlider">Filter 2 Resonance</label><span id="filter2ResValue">0.80</span></div>
+          <input id="filter2ResSlider" type="range" min="0.1" max="20" step="0.1" value="0.8" />
+        </div>
+        <div class="fxControl filterTypeDepthRow">
+          <div class="filterTypeDepthCell">
+            <div class="fxHeader"><label for="filter2TypeSelect">Filter 2 Type</label><span id="filter2TypeValue">LP</span></div>
+            <select id="filter2TypeSelect">
+              <option value="lowpass" selected>Lowpass</option>
+              <option value="highpass">Highpass</option>
+              <option value="bandpass">Bandpass</option>
+              <option value="notch">Notch</option>
+              <option value="allpass">Allpass</option>
+              <option value="peaking">Peaking</option>
+              <option value="lowshelf">Low Shelf</option>
+              <option value="highshelf">High Shelf</option>
+              <option value="combPlus">Comb +</option>
+              <option value="combMinus">Comb -</option>
+            </select>
+          </div>
+          <div class="filterTypeDepthCell">
+            <div class="fxHeader"><label for="filter2DepthSelect">Filter Depth</label><span id="filter2DepthValue">16dB</span></div>
+            <select id="filter2DepthSelect">
+              <option value="16" selected>16dB</option>
+              <option value="24">24dB</option>
+              <option value="48">48dB</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="bassPanel" class="modModal" hidden aria-label="Bass panel">
@@ -246,11 +335,34 @@
         <div class="fxHeader"><label for="pitchSemitoneSlider">Pitch</label><span id="pitchSemitoneValue">+0 st</span></div>
         <input id="pitchSemitoneSlider" type="range" min="-24" max="24" step="1" value="0" />
       </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="beatRepeaterToggle">Beat Repeater</label><span>Main Only</span></div>
+        <label class="switch" for="beatRepeaterToggle">
+          <input id="beatRepeaterToggle" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="beatRepeaterIntervalSelect">Repeat Interval</label><span>Window</span></div>
+        <select id="beatRepeaterIntervalSelect">
+          <option value="8">1/8</option>
+          <option value="4" selected>1/4</option>
+          <option value="2">1/2</option>
+        </select>
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="beatRepeaterGridSelect">Repeat Grid</label><span>Slice</span></div>
+        <select id="beatRepeaterGridSelect">
+          <option value="16" selected>1/16</option>
+          <option value="32">1/32</option>
+          <option value="64">1/64</option>
+        </select>
+      </div>
     </div>
 
-    <div id="modulationModal" class="modModal" hidden aria-label="Modulation panel">
+    <div id="mod1Modal" class="modModal" hidden aria-label="Mod 1 panel">
       <div class="fxControl">
-        <div class="fxHeader"><label for="lfoShapeSelect">LFO Shape</label><span>Mode</span></div>
+        <div class="fxHeader"><label for="lfoShapeSelect">LFO Shape</label><span class="lfoShapeLegend">Mode <svg id="lfoShapePreview1" class="lfoShapePreview" viewBox="0 0 64 18" aria-hidden="true"></svg></span></div>
         <select id="lfoShapeSelect">
           <option value="sine">Sine</option>
           <option value="triangle">Triangle</option>
@@ -258,6 +370,16 @@
           <option value="rampUp">Ramp Up</option>
           <option value="rampDown">Ramp Down</option>
           <option value="randomSH">Random S&amp;H</option>
+          <option value="pulse25">Pulse 25%</option>
+          <option value="pulse10">Pulse 10%</option>
+          <option value="expUp">Exp Up</option>
+          <option value="expDown">Exp Down</option>
+          <option value="doubleSine">Double Sine</option>
+          <option value="bounce">Bounce</option>
+          <option value="stairs4">Stairs 4</option>
+          <option value="stairs8">Stairs 8</option>
+          <option value="smoothSquare">Smooth Square</option>
+          <option value="randomLinear">Random Linear</option>
         </select>
       </div>
       <div class="fxControl">
@@ -283,21 +405,64 @@
         <select id="lfoTargetSelect">
           <option value="amplitude" selected>Amplitude</option>
           <option value="pitch">Pitch</option>
-          <option value="filterCutoff">Filter Cutoff</option>
+          <option value="filter1Cutoff">Filter 1 Freq</option>
+          <option value="filter2Cutoff">Filter 2 Freq</option>
           <option value="ampRelease">Amp Release</option>
+          <option value="delayTimeMs">Delay Time (ms)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="mod2Modal" class="modModal" hidden aria-label="Mod 2 panel">
+      <div class="fxControl">
+        <div class="fxHeader"><label for="lfoShapeSelect2">LFO 2 Shape</label><span class="lfoShapeLegend">Mode <svg id="lfoShapePreview2" class="lfoShapePreview" viewBox="0 0 64 18" aria-hidden="true"></svg></span></div>
+        <select id="lfoShapeSelect2">
+          <option value="sine">Sine</option>
+          <option value="triangle">Triangle</option>
+          <option value="square" selected>Square</option>
+          <option value="rampUp">Ramp Up</option>
+          <option value="rampDown">Ramp Down</option>
+          <option value="randomSH">Random S&amp;H</option>
+          <option value="pulse25">Pulse 25%</option>
+          <option value="pulse10">Pulse 10%</option>
+          <option value="expUp">Exp Up</option>
+          <option value="expDown">Exp Down</option>
+          <option value="doubleSine">Double Sine</option>
+          <option value="bounce">Bounce</option>
+          <option value="stairs4">Stairs 4</option>
+          <option value="stairs8">Stairs 8</option>
+          <option value="smoothSquare">Smooth Square</option>
+          <option value="randomLinear">Random Linear</option>
         </select>
       </div>
       <div class="fxControl">
-        <div class="fxHeader"><label for="modFilterTypeSelect">Filter Type</label><span id="modFilterTypeValue">LP</span></div>
-        <select id="modFilterTypeSelect">
-          <option value="lowpass" selected>LP</option>
-          <option value="highpass">HP</option>
-          <option value="bandpass">BP</option>
+        <div class="fxHeader"><label for="lfoRateSelect2">LFO 2 Rate</label><span id="lfoRateValue2">1/16</span></div>
+        <select id="lfoRateSelect2">
+          <option value="0.5">2/1</option>
+          <option value="1">1/1</option>
+          <option value="2">1/2</option>
+          <option value="4">1/4</option>
+          <option value="8">1/8</option>
+          <option value="16" selected>1/16</option>
+          <option value="32">1/32</option>
+          <option value="64">1/64</option>
+          <option value="128">1/128</option>
         </select>
       </div>
       <div class="fxControl">
-        <div class="fxHeader"><label for="modFilterCutoffSlider">Filter Cutoff</label><span id="modFilterCutoffValue">12000Hz</span></div>
-        <input id="modFilterCutoffSlider" type="range" min="120" max="12000" step="10" value="12000" />
+        <div class="fxHeader"><label for="lfoAmountSlider2">LFO 2 Amount</label><span id="lfoAmountValue2">0%</span></div>
+        <input id="lfoAmountSlider2" type="range" min="0" max="100" step="1" value="0" />
+      </div>
+      <div class="fxControl">
+        <div class="fxHeader"><label for="lfoTargetSelect2">Target Mod</label><span>Target</span></div>
+        <select id="lfoTargetSelect2">
+          <option value="amplitude" selected>Amplitude</option>
+          <option value="pitch">Pitch</option>
+          <option value="filter1Cutoff">Filter 1 Freq</option>
+          <option value="filter2Cutoff">Filter 2 Freq</option>
+          <option value="ampRelease">Amp Release</option>
+          <option value="delayTimeMs">Delay Time (ms)</option>
+        </select>
       </div>
     </div>
 

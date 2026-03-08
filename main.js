@@ -10,9 +10,13 @@ const bassBtn = document.getElementById("bassBtn");
 const bassPanel = document.getElementById("bassPanel");
 const modDock = document.getElementById("modDock");
 const fxModBtn = document.getElementById("fxModBtn");
-const modulationBtn = document.getElementById("modulationBtn");
+const filterBtn = document.getElementById("filterBtn");
+const mod1Btn = document.getElementById("mod1Btn");
+const mod2Btn = document.getElementById("mod2Btn");
 const fxModal = document.getElementById("fxModal");
-const modulationModal = document.getElementById("modulationModal");
+const filterModal = document.getElementById("filterModal");
+const mod1Modal = document.getElementById("mod1Modal");
+const mod2Modal = document.getElementById("mod2Modal");
 const spinnerNoteLayer = document.getElementById("spinnerNoteLayer");
 const statusEl = document.getElementById("status");
 const soundSourceSelect = document.getElementById("soundSourceSelect");
@@ -55,6 +59,9 @@ const delayTimeSlider = document.getElementById("delayTimeSlider");
 const delayTimeValue = document.getElementById("delayTimeValue");
 const delayAmountSlider = document.getElementById("delayAmountSlider");
 const delayAmountValue = document.getElementById("delayAmountValue");
+const beatRepeaterToggle = document.getElementById("beatRepeaterToggle");
+const beatRepeaterIntervalSelect = document.getElementById("beatRepeaterIntervalSelect");
+const beatRepeaterGridSelect = document.getElementById("beatRepeaterGridSelect");
 const stepsSlider = document.getElementById("stepsSlider");
 const stepsValue = document.getElementById("stepsValue");
 const pitchSemitoneSlider = document.getElementById("pitchSemitoneSlider");
@@ -65,15 +72,64 @@ const lfoRateValue = document.getElementById("lfoRateValue");
 const lfoAmountSlider = document.getElementById("lfoAmountSlider");
 const lfoAmountValue = document.getElementById("lfoAmountValue");
 const lfoTargetSelect = document.getElementById("lfoTargetSelect");
-const modFilterTypeSelect = document.getElementById("modFilterTypeSelect");
-const modFilterTypeValue = document.getElementById("modFilterTypeValue");
-const modFilterCutoffSlider = document.getElementById("modFilterCutoffSlider");
-const modFilterCutoffValue = document.getElementById("modFilterCutoffValue");
+const lfoShapePreview1 = document.getElementById("lfoShapePreview1");
+const lfoShapeSelect2 = document.getElementById("lfoShapeSelect2");
+const lfoRateSelect2 = document.getElementById("lfoRateSelect2");
+const lfoRateValue2 = document.getElementById("lfoRateValue2");
+const lfoAmountSlider2 = document.getElementById("lfoAmountSlider2");
+const lfoAmountValue2 = document.getElementById("lfoAmountValue2");
+const lfoTargetSelect2 = document.getElementById("lfoTargetSelect2");
+const lfoShapePreview2 = document.getElementById("lfoShapePreview2");
+const filter1FreqSlider = document.getElementById("filter1FreqSlider");
+const filter1FreqValue = document.getElementById("filter1FreqValue");
+const filter1ResSlider = document.getElementById("filter1ResSlider");
+const filter1ResValue = document.getElementById("filter1ResValue");
+const filter1TypeSelect = document.getElementById("filter1TypeSelect");
+const filter1TypeValue = document.getElementById("filter1TypeValue");
+const filter1DepthSelect = document.getElementById("filter1DepthSelect");
+const filter1DepthValue = document.getElementById("filter1DepthValue");
+const filter2FreqSlider = document.getElementById("filter2FreqSlider");
+const filter2FreqValue = document.getElementById("filter2FreqValue");
+const filter2ResSlider = document.getElementById("filter2ResSlider");
+const filter2ResValue = document.getElementById("filter2ResValue");
+const filter2TypeSelect = document.getElementById("filter2TypeSelect");
+const filter2TypeValue = document.getElementById("filter2TypeValue");
+const filter2DepthSelect = document.getElementById("filter2DepthSelect");
+const filter2DepthValue = document.getElementById("filter2DepthValue");
 const isMobile = window.matchMedia("(pointer: coarse)").matches;
 
 let settingsOpen = false;
 let arpOpen = false;
 let bassOpen = false;
+let toastHideTimer = null;
+let toastClearTimer = null;
+
+function showToast(message, visibleMs = 1800) {
+  if (!statusEl) {
+    return;
+  }
+
+  statusEl.innerText = String(message || "");
+  statusEl.classList.remove("toastVisible", "toastHiding");
+  void statusEl.offsetWidth;
+  statusEl.classList.add("toastVisible");
+
+  if (toastHideTimer) {
+    clearTimeout(toastHideTimer);
+  }
+  if (toastClearTimer) {
+    clearTimeout(toastClearTimer);
+  }
+
+  toastHideTimer = setTimeout(() => {
+    statusEl.classList.remove("toastVisible");
+    statusEl.classList.add("toastHiding");
+    toastClearTimer = setTimeout(() => {
+      statusEl.classList.remove("toastHiding");
+      statusEl.innerText = "";
+    }, 360);
+  }, Math.max(500, visibleMs));
+}
 
 function syncDockButtonStates() {
   if (settingsBtn) {
@@ -93,10 +149,20 @@ function syncDockButtonStates() {
     fxModBtn.classList.toggle("isOpen", open);
     fxModBtn.setAttribute("aria-pressed", open ? "true" : "false");
   }
-  if (modulationBtn) {
-    const open = !!(modulationModal && !modulationModal.hidden);
-    modulationBtn.classList.toggle("isOpen", open);
-    modulationBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  if (filterBtn) {
+    const open = !!(filterModal && !filterModal.hidden);
+    filterBtn.classList.toggle("isOpen", open);
+    filterBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  }
+  if (mod1Btn) {
+    const open = !!(mod1Modal && !mod1Modal.hidden);
+    mod1Btn.classList.toggle("isOpen", open);
+    mod1Btn.setAttribute("aria-pressed", open ? "true" : "false");
+  }
+  if (mod2Btn) {
+    const open = !!(mod2Modal && !mod2Modal.hidden);
+    mod2Btn.classList.toggle("isOpen", open);
+    mod2Btn.setAttribute("aria-pressed", open ? "true" : "false");
   }
 }
 
@@ -135,7 +201,9 @@ if (settingsBtn) {
       setArpOpen(false);
       setBassOpen(false);
       setFxModalOpen(false);
-      setModulationModalOpen(false);
+      setFilterModalOpen(false);
+      setMod1ModalOpen(false);
+      setMod2ModalOpen(false);
     }
   });
 }
@@ -153,7 +221,9 @@ if (arpBtn) {
       setSettingsOpen(false);
       setBassOpen(false);
       setFxModalOpen(false);
-      setModulationModalOpen(false);
+      setFilterModalOpen(false);
+      setMod1ModalOpen(false);
+      setMod2ModalOpen(false);
     }
   });
 }
@@ -173,7 +243,9 @@ if (bassBtn) {
       setSettingsOpen(false);
       setArpOpen(false);
       setFxModalOpen(false);
-      setModulationModalOpen(false);
+      setFilterModalOpen(false);
+      setMod1ModalOpen(false);
+      setMod2ModalOpen(false);
     }
   });
 }
@@ -190,10 +262,45 @@ function setFxModalOpen(open) {
   syncDockButtonStates();
 }
 
-function setModulationModalOpen(open) {
-  if (!modulationModal) return;
-  modulationModal.hidden = !open;
+function setFilterModalOpen(open) {
+  if (!filterModal) return;
+  filterModal.hidden = !open;
   syncDockButtonStates();
+}
+
+function setMod1ModalOpen(open) {
+  if (!mod1Modal) return;
+  if (open) {
+    mod1Modal.removeAttribute("hidden");
+    mod1Modal.style.display = "flex";
+  } else {
+    mod1Modal.setAttribute("hidden", "");
+    mod1Modal.style.removeProperty("display");
+  }
+  syncDockButtonStates();
+}
+
+function setMod2ModalOpen(open) {
+  if (!mod2Modal) return;
+  if (open) {
+    mod2Modal.removeAttribute("hidden");
+    mod2Modal.style.display = "flex";
+  } else {
+    mod2Modal.setAttribute("hidden", "");
+    mod2Modal.style.removeProperty("display");
+  }
+  syncDockButtonStates();
+}
+
+let lastModToggleAt = 0;
+
+function canToggleModNow() {
+  const now = performance.now();
+  if (now - lastModToggleAt < 180) {
+    return false;
+  }
+  lastModToggleAt = now;
+  return true;
 }
 
 if (fxModBtn) {
@@ -202,7 +309,9 @@ if (fxModBtn) {
     const willOpen = fxModal ? fxModal.hidden : false;
     setFxModalOpen(willOpen);
     if (willOpen) {
-      setModulationModalOpen(false);
+      setFilterModalOpen(false);
+      setMod1ModalOpen(false);
+      setMod2ModalOpen(false);
       setSettingsOpen(false);
       setArpOpen(false);
       setBassOpen(false);
@@ -210,18 +319,64 @@ if (fxModBtn) {
   });
 }
 
-if (modulationBtn) {
-  modulationBtn.addEventListener("pointerdown", (event) => {
+if (filterBtn) {
+  filterBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
-    const willOpen = modulationModal ? modulationModal.hidden : false;
-    setModulationModalOpen(willOpen);
+    const willOpen = filterModal ? filterModal.hidden : false;
+    setFilterModalOpen(willOpen);
     if (willOpen) {
       setFxModalOpen(false);
+      setMod1ModalOpen(false);
+      setMod2ModalOpen(false);
       setSettingsOpen(false);
       setArpOpen(false);
       setBassOpen(false);
     }
   });
+}
+
+if (mod1Btn) {
+  const toggleMod1 = (event) => {
+    if (!canToggleModNow()) {
+      return;
+    }
+    event.stopPropagation();
+    const willOpen = mod1Modal ? mod1Modal.hidden : false;
+    setMod1ModalOpen(willOpen);
+    if (willOpen) {
+      setFilterModalOpen(false);
+      setMod2ModalOpen(false);
+      setFxModalOpen(false);
+      setSettingsOpen(false);
+      setArpOpen(false);
+      setBassOpen(false);
+    }
+  };
+
+  mod1Btn.addEventListener("pointerup", toggleMod1);
+  mod1Btn.addEventListener("click", toggleMod1);
+}
+
+if (mod2Btn) {
+  const toggleMod2 = (event) => {
+    if (!canToggleModNow()) {
+      return;
+    }
+    event.stopPropagation();
+    const willOpen = mod2Modal ? mod2Modal.hidden : false;
+    setMod2ModalOpen(willOpen);
+    if (willOpen) {
+      setFilterModalOpen(false);
+      setMod1ModalOpen(false);
+      setFxModalOpen(false);
+      setSettingsOpen(false);
+      setArpOpen(false);
+      setBassOpen(false);
+    }
+  };
+
+  mod2Btn.addEventListener("pointerup", toggleMod2);
+  mod2Btn.addEventListener("click", toggleMod2);
 }
 
 if (modDock) {
@@ -240,8 +395,20 @@ if (fxModal) {
   });
 }
 
-if (modulationModal) {
-  modulationModal.addEventListener("pointerdown", (event) => {
+if (filterModal) {
+  filterModal.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+}
+
+if (mod1Modal) {
+  mod1Modal.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+}
+
+if (mod2Modal) {
+  mod2Modal.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
   });
 }
@@ -264,8 +431,16 @@ window.addEventListener("pointerdown", (event) => {
     setFxModalOpen(false);
   }
 
-  if (modulationModal && !modulationModal.hidden && !targetInside(target, modulationModal) && !targetInside(target, modulationBtn)) {
-    setModulationModalOpen(false);
+  if (filterModal && !filterModal.hidden && !targetInside(target, filterModal) && !targetInside(target, filterBtn)) {
+    setFilterModalOpen(false);
+  }
+
+  if (mod1Modal && !mod1Modal.hidden && !targetInside(target, mod1Modal) && !targetInside(target, mod1Btn)) {
+    setMod1ModalOpen(false);
+  }
+
+  if (mod2Modal && !mod2Modal.hidden && !targetInside(target, mod2Modal) && !targetInside(target, mod2Btn)) {
+    setMod2ModalOpen(false);
   }
 });
 
@@ -273,7 +448,9 @@ setSettingsOpen(false);
 setArpOpen(false);
 setBassOpen(false);
 setFxModalOpen(false);
-setModulationModalOpen(false);
+setFilterModalOpen(false);
+setMod1ModalOpen(false);
+setMod2ModalOpen(false);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
@@ -578,7 +755,7 @@ function beginCenterShift(event) {
   shiftDragOffsetY = 0;
   shiftScaleNotes = buildScaleMidiPool(Math.max(2, octaveRange));
   shiftScaleIndex = findNearestMidiIndex(shiftScaleNotes, currentRootMidi);
-  statusEl.textContent = "Center hold active: drag up/down to shift note and octave.";
+  showToast("Center hold active: drag up/down to shift note and octave.");
 }
 
 function findNearestMidiIndex(pool, midi) {
@@ -628,7 +805,7 @@ function resetShiftPointer() {
   lastShiftPointerActivity = 0;
   if (isCenterHoldShift) {
     isCenterHoldShift = false;
-    statusEl.textContent = `Shift set: ${rootNoteSelect.value} ${baseOctaveShift >= 0 ? `+${baseOctaveShift}` : baseOctaveShift}`;
+    showToast(`Shift set: ${rootNoteSelect.value} ${baseOctaveShift >= 0 ? `+${baseOctaveShift}` : baseOctaveShift}`);
   }
   shiftDragOffsetY = 0;
 }
@@ -657,19 +834,19 @@ function recoverStalePointers() {
 
   if (shiftPointerId !== null && now - lastShiftPointerActivity > stalePointerMs) {
     forceReleasePointers();
-    statusEl.textContent = "Recovered touch control. Continue dragging.";
+    showToast("Recovered touch control. Continue dragging.");
     return;
   }
 
   if (spinPointerId !== null && now - lastSpinPointerActivity > stalePointerMs) {
     forceReleasePointers();
-    statusEl.textContent = "Recovered touch control. Continue dragging.";
+    showToast("Recovered touch control. Continue dragging.");
     return;
   }
 
   if (bassDragPointerId !== null && now - lastBassDragPointerActivity > stalePointerMs) {
     forceReleasePointers();
-    statusEl.textContent = "Recovered touch control. Continue dragging.";
+    showToast("Recovered touch control. Continue dragging.");
   }
 }
 
@@ -684,7 +861,15 @@ window.addEventListener("pointerdown", (event) => {
     return;
   }
 
-  if (modulationModal && !modulationModal.hidden && event.target instanceof Node && modulationModal.contains(event.target)) {
+  if (filterModal && !filterModal.hidden && event.target instanceof Node && filterModal.contains(event.target)) {
+    return;
+  }
+
+  if (mod1Modal && !mod1Modal.hidden && event.target instanceof Node && mod1Modal.contains(event.target)) {
+    return;
+  }
+
+  if (mod2Modal && !mod2Modal.hidden && event.target instanceof Node && mod2Modal.contains(event.target)) {
     return;
   }
 
@@ -702,7 +887,7 @@ window.addEventListener("pointerdown", (event) => {
     bassDragPointerId = event.pointerId;
     lastBassDragPointerActivity = performance.now();
     updateBassDragFromPointer(event.clientX, event.clientY);
-    statusEl.textContent = "Dragging bass engine.";
+    showToast("Dragging bass engine.");
     return;
   }
 
@@ -910,12 +1095,12 @@ async function enableMotion() {
   }
 
   if (!window.isSecureContext) {
-    statusEl.textContent = "Motion needs HTTPS on iPhone. Use an HTTPS tunnel (ngrok/Cloudflare).";
+    showToast("Motion needs HTTPS on iPhone. Use an HTTPS tunnel (ngrok/Cloudflare).");
     return;
   }
 
   if (typeof DeviceOrientationEvent === "undefined") {
-    statusEl.textContent = "Device motion is not supported on this browser.";
+    showToast("Device motion is not supported on this browser.");
     return;
   }
 
@@ -925,7 +1110,7 @@ async function enableMotion() {
     ) {
       const perm = await DeviceOrientationEvent.requestPermission();
       if (perm !== "granted") {
-        statusEl.textContent = "Motion denied. Check Safari Settings > Motion & Orientation Access.";
+        showToast("Motion denied. Check Safari Settings > Motion & Orientation Access.");
         return;
       }
     }
@@ -934,9 +1119,9 @@ async function enableMotion() {
     motionEnabled = true;
     neutralQuat.copy(deviceQuat);
     updateMotionButtonUi();
-    statusEl.textContent = "Motion enabled: tilt controls delay time, delay amount, and release.";
+    showToast("Motion enabled: tilt controls delay time, delay amount, and release.");
   } catch (err) {
-    statusEl.textContent = "Motion unavailable on this device/browser.";
+    showToast("Motion unavailable on this device/browser.");
     console.error(err);
   }
 }
@@ -953,7 +1138,7 @@ function disableMotion() {
   targetQuat.identity();
   correctedEuler.set(0, 0, 0);
   updateMotionButtonUi();
-  statusEl.textContent = "Motion disabled: manual spin control restored.";
+  showToast("Motion disabled: manual spin control restored.");
 }
 
 async function toggleMotion() {
@@ -983,6 +1168,7 @@ let arpDirectionSign = 1;
 let arpDirectionMode = arpDirectionSelect ? arpDirectionSelect.value : "upOnly";
 let masterDryGain = null;
 let masterOutGain = null;
+let finalLimiter = null;
 let reverbSendGain = null;
 let reverbConvolver = null;
 let reverbWetGain = null;
@@ -990,13 +1176,41 @@ let delaySendGain = null;
 let delayNode = null;
 let delayFeedbackGain = null;
 let delayWetGain = null;
+let beatRepeaterInputGain = null;
+let beatRepeaterDryGate = null;
+let beatRepeaterInputGate = null;
+let beatRepeaterLoopInputGain = null;
+let beatRepeaterDelayNode = null;
+let beatRepeaterFeedbackGain = null;
+let beatRepeaterOutputGain = null;
 let lfoShape = lfoShapeSelect ? lfoShapeSelect.value : "square";
 let lfoRateDivision = THREE.MathUtils.clamp(Number(lfoRateSelect ? lfoRateSelect.value : 16), 0.5, 128);
 let lfoAmount = THREE.MathUtils.clamp(Number(lfoAmountSlider ? lfoAmountSlider.value : 0) / 100, 0, 1);
 let lfoTarget = lfoTargetSelect ? lfoTargetSelect.value : "amplitude";
+let lfoShape2 = lfoShapeSelect2 ? lfoShapeSelect2.value : "square";
+let lfoRateDivision2 = THREE.MathUtils.clamp(Number(lfoRateSelect2 ? lfoRateSelect2.value : 16), 0.5, 128);
+let lfoAmount2 = THREE.MathUtils.clamp(Number(lfoAmountSlider2 ? lfoAmountSlider2.value : 0) / 100, 0, 1);
+let lfoTarget2 = lfoTargetSelect2 ? lfoTargetSelect2.value : "amplitude";
+if (lfoTarget === "filterCutoff") {
+  lfoTarget = "filter1Cutoff";
+}
+if (lfoTarget2 === "filterCutoff") {
+  lfoTarget2 = "filter1Cutoff";
+}
 const lfoReleaseAddMaxSeconds = 2.4;
-let modFilterType = modFilterTypeSelect ? modFilterTypeSelect.value : "lowpass";
-let modFilterCutoffHz = THREE.MathUtils.clamp(Number(modFilterCutoffSlider ? modFilterCutoffSlider.value : 12000), 120, 12000);
+const lfoDelayTimeAddMaxSeconds = 0.12;
+const filterFreqMinHz = 40;
+const filterFreqMaxHz = 16000;
+const filterResMin = 0.1;
+const filterResMax = 20;
+let filter1Type = filter1TypeSelect ? filter1TypeSelect.value : "lowpass";
+let filter1CutoffHz = THREE.MathUtils.clamp(Number(filter1FreqSlider ? filter1FreqSlider.value : 12000), filterFreqMinHz, filterFreqMaxHz);
+let filter1Resonance = THREE.MathUtils.clamp(Number(filter1ResSlider ? filter1ResSlider.value : 0.8), filterResMin, filterResMax);
+let filter1DepthDb = filter1DepthSelect ? THREE.MathUtils.clamp(Number(filter1DepthSelect.value), 16, 48) : 16;
+let filter2Type = filter2TypeSelect ? filter2TypeSelect.value : "lowpass";
+let filter2CutoffHz = THREE.MathUtils.clamp(Number(filter2FreqSlider ? filter2FreqSlider.value : 12000), filterFreqMinHz, filterFreqMaxHz);
+let filter2Resonance = THREE.MathUtils.clamp(Number(filter2ResSlider ? filter2ResSlider.value : 0.8), filterResMin, filterResMax);
+let filter2DepthDb = filter2DepthSelect ? THREE.MathUtils.clamp(Number(filter2DepthSelect.value), 16, 48) : 16;
 let lfoSyncStartTime = 0;
 let tempoBpm = THREE.MathUtils.clamp(Number(tempoInput ? tempoInput.value : 120), 30, 280);
 let minArpRate = THREE.MathUtils.clamp(Number(minArpRateSelect ? minArpRateSelect.value : 8), 1, 256);
@@ -1005,6 +1219,14 @@ let transportPlaying = true;
 let currentArpRateExp = Math.log2(Math.max(1, Math.min(minArpRate, maxArpRate)));
 let arpClockAccumulator = 0;
 let bassTickCounter = 0;
+let beatRepeaterEnabled = false;
+let beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect ? beatRepeaterIntervalSelect.value : 4), 2, 8);
+let beatRepeaterGridDivision = THREE.MathUtils.clamp(Number(beatRepeaterGridSelect ? beatRepeaterGridSelect.value : 16), 16, 64);
+let beatRepeaterCycleElapsed = 0;
+let beatRepeaterMode = "bypass";
+let pulsePeriodicWave = null;
+let noiseBuffer = null;
+const masterLimiterThresholdDb = -36;
 
 const ROOT_NOTE_TO_SEMITONE = {
   C: 0,
@@ -1027,8 +1249,18 @@ const SCALE_INTERVALS = {
   minor: [0, 2, 3, 5, 7, 8, 10],
   major: [0, 2, 4, 5, 7, 9, 11],
   harmonicMinor: [0, 2, 3, 5, 7, 8, 11],
+  melodicMinor: [0, 2, 3, 5, 7, 9, 11],
   dorian: [0, 2, 3, 5, 7, 9, 10],
+  phrygian: [0, 1, 3, 5, 7, 8, 10],
+  lydian: [0, 2, 4, 6, 7, 9, 11],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  locrian: [0, 1, 3, 5, 6, 8, 10],
   minorPentatonic: [0, 3, 5, 7, 10],
+  majorPentatonic: [0, 2, 4, 7, 9],
+  blues: [0, 3, 5, 6, 7, 10],
+  wholeTone: [0, 2, 4, 6, 8, 10],
+  diminished: [0, 2, 3, 5, 6, 8, 9, 11],
+  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
 };
 
 const BASE_OCTAVE_MIDI = 48; // C3 base, root note transposed from this.
@@ -1057,9 +1289,9 @@ function midiToFreq(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
-function getLfoRateHz() {
+function getLfoRateHz(rateDivision) {
   const quarterNotesPerSecond = tempoBpm / 60;
-  const noteLengthInQuarterNotes = 4 / Math.max(0.5, lfoRateDivision);
+  const noteLengthInQuarterNotes = 4 / Math.max(0.5, rateDivision);
   return quarterNotesPerSecond / noteLengthInQuarterNotes;
 }
 
@@ -1080,8 +1312,8 @@ function formatRateDivision(rateDivision) {
   return `1/${rounded}`;
 }
 
-function getLfoPhaseAtTime(timeSec) {
-  const rateHz = Math.max(0.001, getLfoRateHz());
+function getLfoPhaseAtTime(rateDivision, timeSec) {
+  const rateHz = Math.max(0.001, getLfoRateHz(rateDivision));
   const phase = ((timeSec - lfoSyncStartTime) * rateHz) % 1;
   return phase < 0 ? phase + 1 : phase;
 }
@@ -1091,42 +1323,147 @@ function getSampleHoldValueForCycle(cycle) {
   return (v - Math.floor(v)) * 2 - 1;
 }
 
-function getLfoValueAtTime(timeSec) {
-  const phase = getLfoPhaseAtTime(timeSec);
+function getHashedNoiseValue(index) {
+  const v = Math.sin((index + 17) * 91.3457 + 11.135) * 12734.874;
+  return (v - Math.floor(v)) * 2 - 1;
+}
 
-  if (lfoShape === "sine") {
+function getLfoValueAtTime(shape, rateDivision, timeSec) {
+  const phase = getLfoPhaseAtTime(rateDivision, timeSec);
+
+  if (shape === "sine") {
     return Math.sin(phase * Math.PI * 2);
   }
 
-  if (lfoShape === "triangle") {
+  if (shape === "triangle") {
     return 1 - 4 * Math.abs(phase - 0.5);
   }
 
-  if (lfoShape === "rampUp") {
-    return phase * 2 - 1;
+  if (shape === "rampUp") {
+    return phase;
   }
 
-  if (lfoShape === "rampDown") {
-    return 1 - phase * 2;
+  if (shape === "rampDown") {
+    return 1 - phase;
   }
 
-  if (lfoShape === "randomSH") {
-    const rateHz = Math.max(0.001, getLfoRateHz());
+  if (shape === "randomSH") {
+    const rateHz = Math.max(0.001, getLfoRateHz(rateDivision));
     const cycle = Math.floor((timeSec - lfoSyncStartTime) * rateHz);
     return getSampleHoldValueForCycle(cycle);
+  }
+
+  if (shape === "pulse25") {
+    return phase < 0.25 ? 1 : -1;
+  }
+
+  if (shape === "pulse10") {
+    return phase < 0.1 ? 1 : -1;
+  }
+
+  if (shape === "expUp") {
+    return Math.pow(phase, 2.4);
+  }
+
+  if (shape === "expDown") {
+    return 1 - Math.pow(phase, 2.4);
+  }
+
+  if (shape === "doubleSine") {
+    return Math.sin(phase * Math.PI * 4);
+  }
+
+  if (shape === "bounce") {
+    return Math.abs(Math.sin(phase * Math.PI * 2)) * 2 - 1;
+  }
+
+  if (shape === "stairs4") {
+    const step = Math.floor(phase * 4);
+    return (step / 3) * 2 - 1;
+  }
+
+  if (shape === "stairs8") {
+    const step = Math.floor(phase * 8);
+    return (step / 7) * 2 - 1;
+  }
+
+  if (shape === "smoothSquare") {
+    return Math.tanh(Math.sin(phase * Math.PI * 2) * 3.2);
+  }
+
+  if (shape === "randomLinear") {
+    const rateHz = Math.max(0.001, getLfoRateHz(rateDivision));
+    const cyclePos = (timeSec - lfoSyncStartTime) * rateHz;
+    const cycle = Math.floor(cyclePos);
+    const frac = cyclePos - cycle;
+    const a = getHashedNoiseValue(cycle);
+    const b = getHashedNoiseValue(cycle + 1);
+    return THREE.MathUtils.lerp(a, b, frac);
   }
 
   return phase < 0.5 ? 1 : -1;
 }
 
 function buildLfoCurve(startTime, duration, sampleCount = 96) {
+  return buildTargetCurve("amplitude", startTime, duration, sampleCount);
+}
+
+function buildLfoCurveFor(shape, rateDivision, startTime, duration, sampleCount = 96) {
   const safeDuration = Math.max(duration, 0.01);
   const size = Math.max(2, sampleCount);
   const curve = new Float32Array(size);
   for (let i = 0; i < size; i += 1) {
     const frac = i / (size - 1);
     const t = startTime + frac * safeDuration;
-    curve[i] = getLfoValueAtTime(t);
+    curve[i] = getLfoValueAtTime(shape, rateDivision, t);
+  }
+  return curve;
+}
+
+function renderLfoShapePreview(svgEl, shape) {
+  if (!svgEl) {
+    return;
+  }
+
+  const width = 64;
+  const height = 18;
+  const sampleCount = 33;
+  const points = [];
+
+  for (let i = 0; i < sampleCount; i += 1) {
+    const frac = i / (sampleCount - 1);
+    const value = getLfoValueAtTime(shape, 16, frac);
+    const x = Math.round(frac * width * 100) / 100;
+    const y = Math.round((height * 0.5 - value * (height * 0.4)) * 100) / 100;
+    points.push(`${x},${y}`);
+  }
+
+  svgEl.innerHTML = `<polyline points="${points.join(" ")}" fill="none" stroke="rgba(160, 238, 255, 0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />`;
+}
+
+function hasTargetMod(targetName) {
+  return (lfoTarget === targetName && lfoAmount > 0) || (lfoTarget2 === targetName && lfoAmount2 > 0);
+}
+
+function getCombinedTargetValueAtTime(targetName, timeSec) {
+  let value = 0;
+  if (lfoTarget === targetName && lfoAmount > 0) {
+    value += getLfoValueAtTime(lfoShape, lfoRateDivision, timeSec) * lfoAmount;
+  }
+  if (lfoTarget2 === targetName && lfoAmount2 > 0) {
+    value += getLfoValueAtTime(lfoShape2, lfoRateDivision2, timeSec) * lfoAmount2;
+  }
+  return THREE.MathUtils.clamp(value, -1, 1);
+}
+
+function buildTargetCurve(targetName, startTime, duration, sampleCount = 96) {
+  const safeDuration = Math.max(duration, 0.01);
+  const size = Math.max(2, sampleCount);
+  const curve = new Float32Array(size);
+  for (let i = 0; i < size; i += 1) {
+    const frac = i / (size - 1);
+    const t = startTime + frac * safeDuration;
+    curve[i] = getCombinedTargetValueAtTime(targetName, t);
   }
   return curve;
 }
@@ -1134,33 +1471,164 @@ function buildLfoCurve(startTime, duration, sampleCount = 96) {
 function getReleaseWithLfo(baseRelease, timeSec, minRelease = 0.02, maxRelease = 2.2) {
   let release = THREE.MathUtils.clamp(baseRelease, minRelease, maxRelease);
 
-  if (lfoTarget !== "ampRelease" || lfoAmount <= 0) {
+  if (!hasTargetMod("ampRelease")) {
     return release;
   }
 
-  // Amp Release LFO adds milliseconds on top of the FX MOD release control.
-  const lfoValue = getLfoValueAtTime(timeSec);
-  const normalized = THREE.MathUtils.clamp((lfoValue + 1) * 0.5, 0, 1);
-  const releaseAddSeconds = normalized * lfoAmount * lfoReleaseAddMaxSeconds;
+  const releaseAddSeconds = getCombinedTargetValueAtTime("ampRelease", timeSec) * lfoReleaseAddMaxSeconds;
   release += releaseAddSeconds;
   return THREE.MathUtils.clamp(release, minRelease, maxRelease + lfoReleaseAddMaxSeconds);
 }
 
+function getModulatedDelayTimeSeconds(timeSec) {
+  if (!hasTargetMod("delayTimeMs")) {
+    return delayTimeSeconds;
+  }
+  const add = getCombinedTargetValueAtTime("delayTimeMs", timeSec) * lfoDelayTimeAddMaxSeconds;
+  return THREE.MathUtils.clamp(delayTimeSeconds + add, delayTimeMinSeconds, delayTimeMaxSeconds);
+}
+
+const voiceFilterMeta = new WeakMap();
+
+function cutoffHzToCombDelaySeconds(cutoffHz) {
+  const hz = THREE.MathUtils.clamp(cutoffHz, filterFreqMinHz, filterFreqMaxHz);
+  return THREE.MathUtils.clamp(1 / hz, 0.0008, 0.03);
+}
+
+function formatFilterTypeShort(type) {
+  const map = {
+    lowpass: "LP",
+    highpass: "HP",
+    bandpass: "BP",
+    notch: "Notch",
+    allpass: "All",
+    peaking: "Peak",
+    lowshelf: "LowSh",
+    highshelf: "HighSh",
+    combPlus: "Comb+",
+    combMinus: "Comb-",
+  };
+  return map[type] || "LP";
+}
+
+function getFilterDepthStageCount(depthDb) {
+  if (depthDb >= 48) {
+    return 4;
+  }
+  if (depthDb >= 24) {
+    return 2;
+  }
+  return 1;
+}
+
+function buildVoiceFilterStage(timeSec, filterType, cutoffHz, resonance, depthDb) {
+  const stageCount = getFilterDepthStageCount(depthDb);
+
+  if (filterType === "combPlus" || filterType === "combMinus") {
+    let firstInput = null;
+    let previousOutput = null;
+    const cutoffTargets = [];
+    const resNorm = THREE.MathUtils.clamp((resonance - filterResMin) / (filterResMax - filterResMin), 0, 1);
+    const depthNorm = THREE.MathUtils.clamp((depthDb - 16) / 32, 0, 1);
+
+    for (let i = 0; i < stageCount; i += 1) {
+      const input = audioCtx.createGain();
+      const output = audioCtx.createGain();
+      const delay = audioCtx.createDelay(0.03);
+      const feedback = audioCtx.createGain();
+      const dry = audioCtx.createGain();
+      const wet = audioCtx.createGain();
+      const fbMag = THREE.MathUtils.clamp(0.08 + resNorm * (0.68 + depthNorm * 0.2), 0, 0.985);
+      const dryAmt = THREE.MathUtils.clamp(0.72 - depthNorm * 0.28, 0.28, 0.75);
+      const wetAmt = THREE.MathUtils.clamp(0.72 + depthNorm * 0.24, 0.72, 0.96);
+
+      delay.delayTime.setValueAtTime(cutoffHzToCombDelaySeconds(cutoffHz), timeSec);
+      feedback.gain.setValueAtTime(filterType === "combMinus" ? -fbMag : fbMag, timeSec);
+      dry.gain.setValueAtTime(dryAmt, timeSec);
+      wet.gain.setValueAtTime(wetAmt, timeSec);
+
+      input.connect(dry);
+      dry.connect(output);
+      input.connect(delay);
+      delay.connect(wet);
+      wet.connect(output);
+      delay.connect(feedback);
+      feedback.connect(delay);
+
+      cutoffTargets.push({
+        param: delay.delayTime,
+        mode: "comb-delay",
+      });
+
+      if (!firstInput) {
+        firstInput = input;
+      }
+
+      if (previousOutput) {
+        previousOutput.connect(input);
+      }
+      previousOutput = output;
+    }
+
+    return {
+      input: firstInput,
+      output: previousOutput,
+      cutoffTargets,
+      cutoffBaseHz: cutoffHz,
+    };
+  }
+
+  let firstNode = null;
+  let previousNode = null;
+  const cutoffTargets = [];
+
+  for (let i = 0; i < stageCount; i += 1) {
+    const biquad = audioCtx.createBiquadFilter();
+    biquad.type = filterType;
+    biquad.frequency.setValueAtTime(cutoffHz, timeSec);
+    biquad.Q.setValueAtTime(resonance, timeSec);
+
+    if (!firstNode) {
+      firstNode = biquad;
+    }
+
+    if (previousNode) {
+      previousNode.connect(biquad);
+    }
+    previousNode = biquad;
+    cutoffTargets.push({
+      param: biquad.frequency,
+      mode: "frequency",
+    });
+  }
+
+  return {
+    input: firstNode,
+    output: previousNode,
+    cutoffTargets,
+    cutoffBaseHz: cutoffHz,
+  };
+}
+
 function createVoiceModFilter(timeSec) {
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = modFilterType;
-  filter.frequency.setValueAtTime(modFilterCutoffHz, timeSec);
-  filter.Q.setValueAtTime(modFilterType === "bandpass" ? 1.2 : 0.8, timeSec);
-  return filter;
+  const stage1 = buildVoiceFilterStage(timeSec, filter1Type, filter1CutoffHz, filter1Resonance, filter1DepthDb);
+  const stage2 = buildVoiceFilterStage(timeSec, filter2Type, filter2CutoffHz, filter2Resonance, filter2DepthDb);
+  stage1.output.connect(stage2.input);
+  const graph = {
+    input: stage1.input,
+    output: stage2.output,
+  };
+  voiceFilterMeta.set(graph, { stage1, stage2 });
+  return graph;
 }
 
 function applyPitchLfo(detuneParams, startTime, duration) {
-  if (lfoTarget !== "pitch" || lfoAmount <= 0) {
+  if (!hasTargetMod("pitch")) {
     return;
   }
 
-  const baseCurve = buildLfoCurve(startTime, duration);
-  const depthCents = lfoAmount * 1200;
+  const baseCurve = buildTargetCurve("pitch", startTime, duration);
+  const depthCents = 1200;
   const curve = new Float32Array(baseCurve.length);
   for (let i = 0; i < baseCurve.length; i += 1) {
     curve[i] = baseCurve[i] * depthCents;
@@ -1178,12 +1646,12 @@ function applyPitchLfo(detuneParams, startTime, duration) {
 }
 
 function applyAmplitudeLfo(gainParam, startTime, duration) {
-  if (lfoTarget !== "amplitude" || lfoAmount <= 0 || !gainParam) {
+  if (!hasTargetMod("amplitude") || !gainParam) {
     return;
   }
 
-  const baseCurve = buildLfoCurve(startTime, duration);
-  const depth = lfoAmount * 0.95;
+  const baseCurve = buildTargetCurve("amplitude", startTime, duration);
+  const depth = 0.95;
   const curve = new Float32Array(baseCurve.length);
   for (let i = 0; i < baseCurve.length; i += 1) {
     curve[i] = THREE.MathUtils.clamp(1 + baseCurve[i] * depth, 0.05, 2);
@@ -1194,21 +1662,44 @@ function applyAmplitudeLfo(gainParam, startTime, duration) {
   gainParam.setValueCurveAtTime(curve, startTime, Math.max(duration, 0.01));
 }
 
-function applyFilterLfo(filterNode, startTime, duration) {
-  if (lfoTarget !== "filterCutoff" || lfoAmount <= 0 || !filterNode) {
+function applyFilterLfo(filterGraph, startTime, duration) {
+  if (!filterGraph) {
     return;
   }
 
-  const baseCurve = buildLfoCurve(startTime, duration);
-  const depthHz = modFilterCutoffHz * lfoAmount * 0.95;
-  const curve = new Float32Array(baseCurve.length);
-  for (let i = 0; i < baseCurve.length; i += 1) {
-    curve[i] = THREE.MathUtils.clamp(modFilterCutoffHz + baseCurve[i] * depthHz, 120, 12000);
+  const meta = voiceFilterMeta.get(filterGraph);
+  if (!meta) {
+    return;
   }
 
-  filterNode.frequency.cancelScheduledValues(startTime);
-  filterNode.frequency.setValueAtTime(modFilterCutoffHz, startTime);
-  filterNode.frequency.setValueCurveAtTime(curve, startTime, Math.max(duration, 0.01));
+  const applyStageLfo = (stage, targetName, baseCutoffHz) => {
+    if (!stage || !stage.cutoffTargets || !stage.cutoffTargets.length || !hasTargetMod(targetName)) {
+      return;
+    }
+
+    const baseCurve = buildTargetCurve(targetName, startTime, duration);
+    const depthHz = baseCutoffHz * 0.95;
+    const curve = new Float32Array(baseCurve.length);
+    for (let i = 0; i < baseCurve.length; i += 1) {
+      const cutoffHz = THREE.MathUtils.clamp(baseCutoffHz + baseCurve[i] * depthHz, filterFreqMinHz, filterFreqMaxHz);
+      const cutoffMode = stage.cutoffTargets[0].mode;
+      curve[i] = cutoffMode === "comb-delay" ? cutoffHzToCombDelaySeconds(cutoffHz) : cutoffHz;
+    }
+
+    for (let i = 0; i < stage.cutoffTargets.length; i += 1) {
+      const target = stage.cutoffTargets[i];
+      if (!target || !target.param) {
+        continue;
+      }
+      const baseValue = target.mode === "comb-delay" ? cutoffHzToCombDelaySeconds(baseCutoffHz) : baseCutoffHz;
+      target.param.cancelScheduledValues(startTime);
+      target.param.setValueAtTime(baseValue, startTime);
+      target.param.setValueCurveAtTime(curve, startTime, Math.max(duration, 0.01));
+    }
+  };
+
+  applyStageLfo(meta.stage1, "filter1Cutoff", filter1CutoffHz);
+  applyStageLfo(meta.stage2, "filter2Cutoff", filter2CutoffHz);
 }
 
 function semitoneToNoteName(semitone) {
@@ -1473,6 +1964,61 @@ function getIntervalSecondsFromRate(rateDivisor) {
   return getQuarterNoteSeconds() * (4 / Math.max(1, rateDivisor));
 }
 
+function setBeatRepeaterMode(mode) {
+  if (!audioCtx || !beatRepeaterDryGate || !beatRepeaterInputGate || !beatRepeaterFeedbackGain) {
+    return;
+  }
+
+  if (beatRepeaterMode === mode) {
+    return;
+  }
+
+  beatRepeaterMode = mode;
+  const t = audioCtx.currentTime;
+
+  if (mode === "capture") {
+    beatRepeaterDryGate.gain.setTargetAtTime(1, t, 0.005);
+    beatRepeaterInputGate.gain.setTargetAtTime(1, t, 0.005);
+    beatRepeaterFeedbackGain.gain.setTargetAtTime(0, t, 0.005);
+    return;
+  }
+
+  if (mode === "repeat") {
+    beatRepeaterDryGate.gain.setTargetAtTime(0, t, 0.005);
+    beatRepeaterInputGate.gain.setTargetAtTime(0, t, 0.005);
+    beatRepeaterFeedbackGain.gain.setTargetAtTime(0.985, t, 0.005);
+    return;
+  }
+
+  beatRepeaterDryGate.gain.setTargetAtTime(1, t, 0.005);
+  beatRepeaterInputGate.gain.setTargetAtTime(0, t, 0.005);
+  beatRepeaterFeedbackGain.gain.setTargetAtTime(0, t, 0.005);
+}
+
+function updateBeatRepeater(dt) {
+  if (!audioCtx || !beatRepeaterDelayNode) {
+    return;
+  }
+
+  if (!beatRepeaterEnabled || !transportPlaying) {
+    beatRepeaterCycleElapsed = 0;
+    setBeatRepeaterMode("bypass");
+    return;
+  }
+
+  const intervalSec = getIntervalSecondsFromRate(beatRepeaterIntervalDivision);
+  const gridSec = getIntervalSecondsFromRate(beatRepeaterGridDivision);
+  const captureSec = Math.min(gridSec, intervalSec);
+
+  beatRepeaterDelayNode.delayTime.setTargetAtTime(captureSec, audioCtx.currentTime, 0.01);
+  beatRepeaterCycleElapsed += dt;
+  while (beatRepeaterCycleElapsed >= intervalSec) {
+    beatRepeaterCycleElapsed -= intervalSec;
+  }
+
+  setBeatRepeaterMode(beatRepeaterCycleElapsed < captureSec ? "capture" : "repeat");
+}
+
 function getCurrentArpIntervalSeconds(speedNorm, dt) {
   const minRate = Math.max(1, Math.min(minArpRate, maxArpRate));
   const maxRate = Math.max(1, Math.max(minArpRate, maxArpRate));
@@ -1583,7 +2129,7 @@ function syncBassToneLockUi() {
 
 function updateBassReleaseValueLabel(seconds) {
   if (bassEnvReleaseValue) {
-    bassEnvReleaseValue.textContent = `${Math.round(seconds * 1000)}ms`;
+    bassEnvReleaseValue.textContent = formatMsWithRhythmHint(seconds * 1000);
   }
 }
 
@@ -1607,7 +2153,7 @@ if (bassEngineToggle) {
   bassEnabled = bassEngineToggle.checked;
   bassEngineToggle.addEventListener("change", () => {
     bassEnabled = bassEngineToggle.checked;
-    statusEl.textContent = bassEnabled ? "Bass engine on." : "Bass engine off.";
+    showToast(bassEnabled ? "Bass engine on." : "Bass engine off.");
   });
 }
 
@@ -1616,7 +2162,7 @@ if (bassInvertScaleToggle) {
   bassInvertScaleToggle.addEventListener("change", () => {
     bassInvertScale = bassInvertScaleToggle.checked;
     refreshWingAssignments();
-    statusEl.textContent = bassInvertScale ? "Bass scale inverted." : "Bass scale normal order.";
+    showToast(bassInvertScale ? "Bass scale inverted." : "Bass scale normal order.");
   });
 }
 
@@ -1679,7 +2225,7 @@ if (soundSourceSelect) {
   soundSourceSelect.addEventListener("change", () => {
     soundSourceMode = soundSourceSelect.value;
     const label = soundSourceSelect.options[soundSourceSelect.selectedIndex].text;
-    statusEl.textContent = `Sound source: ${label}.`;
+    showToast(`Sound source: ${label}.`);
   });
 }
 
@@ -1739,12 +2285,12 @@ if (pitchSemitoneSlider && pitchSemitoneValue) {
 
 muteToggle.addEventListener("change", () => {
   muted = muteToggle.checked;
-  statusEl.textContent = muted ? "Sound muted." : "Sound on.";
+  showToast(muted ? "Sound muted." : "Sound on.");
 });
 
 hapticsToggle.addEventListener("change", () => {
   noHaptics = hapticsToggle.checked;
-  statusEl.textContent = noHaptics ? "Haptics off." : "Haptics on.";
+  showToast(noHaptics ? "Haptics off." : "Haptics on.");
 });
 
 if (volumeSlider && volumeValue) {
@@ -1767,13 +2313,13 @@ rootNoteSelect.addEventListener("change", () => {
   syncRootControlsFromMidi();
   resetArpSequence();
   refreshWingAssignments();
-  statusEl.textContent = `Root note set to ${rootNoteSelect.value}.`;
+  showToast(`Root note set to ${rootNoteSelect.value}.`);
 });
 
 scaleSelect.addEventListener("change", () => {
   resetArpSequence();
   refreshWingAssignments();
-  statusEl.textContent = `Scale set to ${scaleSelect.options[scaleSelect.selectedIndex].text}.`;
+  showToast(`Scale set to ${scaleSelect.options[scaleSelect.selectedIndex].text}.`);
 });
 
 if (octaveRangeSlider && octaveRangeValue) {
@@ -1823,7 +2369,7 @@ if (arpDirectionSelect) {
     arpDirectionMode = arpDirectionSelect.value;
     resetArpSequence();
     const label = arpDirectionSelect.options[arpDirectionSelect.selectedIndex].text;
-    statusEl.textContent = `Arp direction: ${label}.`;
+    showToast(`Arp direction: ${label}.`);
   });
 }
 
@@ -1831,6 +2377,8 @@ if (tempoInput) {
   tempoInput.addEventListener("input", () => {
     tempoBpm = THREE.MathUtils.clamp(Number(tempoInput.value || 120), 30, 280);
     tempoInput.value = String(Math.round(tempoBpm));
+    updateFxLabels();
+    updateBassReleaseValueLabel(bassReleaseLocked ? envelopeReleaseSeconds : bassEnvelopeReleaseSeconds);
   });
 }
 
@@ -1873,12 +2421,12 @@ if (transportToggleBtn) {
     if (!transportPlaying) {
       arpClockAccumulator = 0;
       bassTickCounter = 0;
-      statusEl.textContent = "Transport stopped.";
+      showToast("Transport stopped.");
     } else {
       if (audioCtx) {
         lfoSyncStartTime = audioCtx.currentTime;
       }
-      statusEl.textContent = `Transport playing at ${Math.round(tempoBpm)} BPM.`;
+      showToast(`Transport playing at ${Math.round(tempoBpm)} BPM.`);
     }
     updateTransportToggleUi();
   });
@@ -1887,15 +2435,52 @@ if (transportToggleBtn) {
 normalizeArpRateBounds();
 updateTransportToggleUi();
 
+function getRhythmHintDivisions() {
+  return [1, 2, 4, 8, 16, 32, 64];
+}
+
+function formatMsWithRhythmHint(milliseconds) {
+  const rhythmDivisions = getRhythmHintDivisions();
+  const ms = Math.max(0, Math.round(milliseconds));
+  const quarterMs = 60000 / Math.max(30, tempoBpm);
+  let nearestDivision = rhythmDivisions[0];
+  let nearestMs = quarterMs * (4 / nearestDivision);
+  let minDiff = Math.abs(ms - nearestMs);
+
+  for (let i = 1; i < rhythmDivisions.length; i += 1) {
+    const division = rhythmDivisions[i];
+    const divisionMs = quarterMs * (4 / division);
+    const diff = Math.abs(ms - divisionMs);
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearestDivision = division;
+      nearestMs = divisionMs;
+    }
+  }
+
+  const ratioError = nearestMs > 0 ? minDiff / nearestMs : 1;
+  const divisionText = `1/${nearestDivision}`;
+
+  if (ratioError <= 0.035) {
+    return `${ms}ms (${divisionText}th)`;
+  }
+
+  if (ratioError <= 0.16) {
+    return `${ms}ms (${divisionText}ish)`;
+  }
+
+  return `${ms}ms`;
+}
+
 function updateFxLabels() {
   if (reverbDecayValue) {
     reverbDecayValue.textContent = `${reverbDecaySeconds.toFixed(1)}s`;
   }
   if (envReleaseValue) {
-    envReleaseValue.textContent = `${Math.round(envelopeReleaseSeconds * 1000)}ms`;
+    envReleaseValue.textContent = formatMsWithRhythmHint(envelopeReleaseSeconds * 1000);
   }
   if (delayTimeValue) {
-    delayTimeValue.textContent = `${Math.round(delayTimeSeconds * 1000)}ms`;
+    delayTimeValue.textContent = formatMsWithRhythmHint(delayTimeSeconds * 1000);
   }
   if (delayAmountValue) {
     delayAmountValue.textContent = `${Math.round(delayAmount * 100)}%`;
@@ -1903,20 +2488,38 @@ function updateFxLabels() {
   if (lfoRateValue) {
     lfoRateValue.textContent = formatRateDivision(lfoRateDivision);
   }
+  if (lfoRateValue2) {
+    lfoRateValue2.textContent = formatRateDivision(lfoRateDivision2);
+  }
   if (lfoAmountValue) {
     lfoAmountValue.textContent = `${Math.round(lfoAmount * 100)}%`;
   }
-  if (modFilterTypeValue) {
-    if (modFilterType === "highpass") {
-      modFilterTypeValue.textContent = "HP";
-    } else if (modFilterType === "bandpass") {
-      modFilterTypeValue.textContent = "BP";
-    } else {
-      modFilterTypeValue.textContent = "LP";
-    }
+  if (lfoAmountValue2) {
+    lfoAmountValue2.textContent = `${Math.round(lfoAmount2 * 100)}%`;
   }
-  if (modFilterCutoffValue) {
-    modFilterCutoffValue.textContent = `${Math.round(modFilterCutoffHz)}Hz`;
+  if (filter1TypeValue) {
+    filter1TypeValue.textContent = formatFilterTypeShort(filter1Type);
+  }
+  if (filter2TypeValue) {
+    filter2TypeValue.textContent = formatFilterTypeShort(filter2Type);
+  }
+  if (filter1DepthValue) {
+    filter1DepthValue.textContent = `${Math.round(filter1DepthDb)}dB`;
+  }
+  if (filter2DepthValue) {
+    filter2DepthValue.textContent = `${Math.round(filter2DepthDb)}dB`;
+  }
+  if (filter1FreqValue) {
+    filter1FreqValue.textContent = `${Math.round(filter1CutoffHz)}Hz`;
+  }
+  if (filter2FreqValue) {
+    filter2FreqValue.textContent = `${Math.round(filter2CutoffHz)}Hz`;
+  }
+  if (filter1ResValue) {
+    filter1ResValue.textContent = filter1Resonance.toFixed(2);
+  }
+  if (filter2ResValue) {
+    filter2ResValue.textContent = filter2Resonance.toFixed(2);
   }
 }
 
@@ -2057,6 +2660,7 @@ function initAudio() {
 
   masterDryGain = audioCtx.createGain();
   masterOutGain = audioCtx.createGain();
+  finalLimiter = audioCtx.createDynamicsCompressor();
   reverbSendGain = audioCtx.createGain();
   reverbConvolver = audioCtx.createConvolver();
   reverbWetGain = audioCtx.createGain();
@@ -2064,6 +2668,13 @@ function initAudio() {
   delayNode = audioCtx.createDelay(0.25);
   delayFeedbackGain = audioCtx.createGain();
   delayWetGain = audioCtx.createGain();
+  beatRepeaterInputGain = audioCtx.createGain();
+  beatRepeaterDryGate = audioCtx.createGain();
+  beatRepeaterInputGate = audioCtx.createGain();
+  beatRepeaterLoopInputGain = audioCtx.createGain();
+  beatRepeaterDelayNode = audioCtx.createDelay(0.5);
+  beatRepeaterFeedbackGain = audioCtx.createGain();
+  beatRepeaterOutputGain = audioCtx.createGain();
 
   masterDryGain.gain.value = 0.92;
   masterOutGain.gain.value = masterVolume;
@@ -2073,6 +2684,29 @@ function initAudio() {
   delayNode.delayTime.value = delayTimeSeconds;
   delayFeedbackGain.gain.value = delayAmount;
   delayWetGain.gain.value = 0.6;
+  beatRepeaterInputGain.gain.value = 1;
+  beatRepeaterDryGate.gain.value = 1;
+  beatRepeaterInputGate.gain.value = 0;
+  beatRepeaterFeedbackGain.gain.value = 0;
+  beatRepeaterOutputGain.gain.value = 1;
+  beatRepeaterDelayNode.delayTime.value = getIntervalSecondsFromRate(beatRepeaterGridDivision);
+  // Master safety limiter: transparent at normal levels, clamps fast only above the ceiling.
+  finalLimiter.threshold.value = masterLimiterThresholdDb;
+  finalLimiter.knee.value = 0;
+  finalLimiter.ratio.value = 20;
+  finalLimiter.attack.value = 0.003;
+  finalLimiter.release.value = 0.06;
+  pulsePeriodicWave = audioCtx.createPeriodicWave(
+    new Float32Array([0, 1, 0.8, 0.62, 0.48, 0.35, 0.25, 0.18]),
+    new Float32Array([0, 0, 0.2, 0, 0.16, 0, 0.12, 0])
+  );
+
+  const noiseLength = Math.max(1, Math.floor(audioCtx.sampleRate * 1.4));
+  noiseBuffer = audioCtx.createBuffer(1, noiseLength, audioCtx.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < noiseLength; i += 1) {
+    noiseData[i] = Math.random() * 2 - 1;
+  }
 
   masterDryGain.connect(masterOutGain);
   reverbSendGain.connect(reverbConvolver);
@@ -2084,19 +2718,42 @@ function initAudio() {
   delayFeedbackGain.connect(delayNode);
   delayNode.connect(delayWetGain);
   delayWetGain.connect(masterOutGain);
-  masterOutGain.connect(audioCtx.destination);
+  masterOutGain.connect(finalLimiter);
+  finalLimiter.connect(audioCtx.destination);
 
+  beatRepeaterInputGain.connect(beatRepeaterDryGate);
+  beatRepeaterDryGate.connect(beatRepeaterOutputGain);
+  beatRepeaterInputGain.connect(beatRepeaterInputGate);
+  beatRepeaterInputGate.connect(beatRepeaterLoopInputGain);
+  beatRepeaterFeedbackGain.connect(beatRepeaterLoopInputGain);
+  beatRepeaterLoopInputGain.connect(beatRepeaterDelayNode);
+  beatRepeaterDelayNode.connect(beatRepeaterFeedbackGain);
+  beatRepeaterDelayNode.connect(beatRepeaterOutputGain);
+  beatRepeaterOutputGain.connect(masterDryGain);
+  beatRepeaterOutputGain.connect(reverbSendGain);
+  beatRepeaterOutputGain.connect(delaySendGain);
+
+  setBeatRepeaterMode("bypass");
   refreshReverbBuffer();
 }
 
-function routeVoiceToMix(gainNode) {
+function routeToMixBuses(node) {
   if (masterDryGain && reverbSendGain && delaySendGain) {
-    gainNode.connect(masterDryGain);
-    gainNode.connect(reverbSendGain);
-    gainNode.connect(delaySendGain);
+    node.connect(masterDryGain);
+    node.connect(reverbSendGain);
+    node.connect(delaySendGain);
     return;
   }
-  gainNode.connect(audioCtx.destination);
+  node.connect(audioCtx.destination);
+}
+
+function routeVoiceToMix(gainNode, isMainSpinner = true) {
+  if (isMainSpinner && beatRepeaterInputGain) {
+    gainNode.connect(beatRepeaterInputGain);
+    return;
+  }
+
+  routeToMixBuses(gainNode);
 }
 
 async function unlockAudio() {
@@ -2167,8 +2824,8 @@ function playMonotoneTick(speed) {
     applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
     applyFilterLfo(voiceFilter, t, lfoDuration);
 
-    osc.connect(voiceFilter);
-    voiceFilter.connect(ampMod);
+    osc.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
     ampMod.connect(gain);
     routeVoiceToMix(gain);
     osc.start(t);
@@ -2179,7 +2836,7 @@ function playMonotoneTick(speed) {
     if (soundSourceSelect) {
       soundSourceSelect.value = "arp";
     }
-    statusEl.textContent = "Monotone fallback to arpeggiator.";
+    showToast("Monotone fallback to arpeggiator.");
     console.error(err);
   }
 }
@@ -2229,8 +2886,8 @@ function playOcarinaTick(speed) {
     pitchOsc.connect(formant);
     breathOsc.connect(formant);
     formant.connect(body);
-    body.connect(voiceFilter);
-    voiceFilter.connect(ampMod);
+    body.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
     ampMod.connect(gain);
     routeVoiceToMix(gain);
 
@@ -2274,9 +2931,9 @@ function playArpTick(speed) {
     applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
     applyFilterLfo(voiceFilter, t, lfoDuration);
 
-    osc.connect(voiceFilter);
-    sub.connect(voiceFilter);
-    voiceFilter.connect(ampMod);
+    osc.connect(voiceFilter.input);
+    sub.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
     ampMod.connect(gain);
     routeVoiceToMix(gain);
     osc.start(t);
@@ -2289,6 +2946,288 @@ function playArpTick(speed) {
   }
 }
 
+function playWaveformTick(speed, oscType, sourceMode) {
+  if (!audioReady || !audioCtx) {
+    return;
+  }
+
+  try {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const sub = audioCtx.createOscillator();
+    const ampMod = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const voiceFilter = createVoiceModFilter(t);
+    const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
+    const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
+    const release = getReleaseWithLfo(envelopeReleaseSeconds, t, 0.02, 1.2);
+    const lfoDuration = release + 0.03;
+
+    osc.type = oscType;
+    sub.type = "sine";
+    osc.frequency.setValueAtTime(baseFreq, t);
+    sub.frequency.setValueAtTime(baseFreq * 0.5, t);
+    if (sourceMode === "waveSaw") {
+      osc.detune.setValueAtTime(3, t);
+      sub.detune.setValueAtTime(-3, t);
+    }
+
+    ampMod.gain.setValueAtTime(1, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.012 + brightness * 0.011, t + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
+
+    applyPitchLfo([osc.detune, sub.detune], t, lfoDuration);
+    applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
+    applyFilterLfo(voiceFilter, t, lfoDuration);
+
+    osc.connect(voiceFilter.input);
+    sub.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
+    ampMod.connect(gain);
+    routeVoiceToMix(gain);
+    osc.start(t);
+    sub.start(t);
+    osc.stop(t + release + 0.02);
+    sub.stop(t + release + 0.02);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function playPulseTick(speed) {
+  if (!audioReady || !audioCtx) {
+    return;
+  }
+
+  try {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const sub = audioCtx.createOscillator();
+    const ampMod = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const voiceFilter = createVoiceModFilter(t);
+    const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
+    const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
+    const release = getReleaseWithLfo(envelopeReleaseSeconds * 0.9, t, 0.02, 1);
+    const lfoDuration = release + 0.03;
+
+    if (pulsePeriodicWave) {
+      osc.setPeriodicWave(pulsePeriodicWave);
+    } else {
+      osc.type = "square";
+    }
+    sub.type = "sine";
+    osc.frequency.setValueAtTime(baseFreq, t);
+    sub.frequency.setValueAtTime(baseFreq * 0.5, t);
+
+    ampMod.gain.setValueAtTime(1, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.011 + brightness * 0.01, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
+
+    applyPitchLfo([osc.detune, sub.detune], t, lfoDuration);
+    applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
+    applyFilterLfo(voiceFilter, t, lfoDuration);
+
+    osc.connect(voiceFilter.input);
+    sub.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
+    ampMod.connect(gain);
+    routeVoiceToMix(gain);
+    osc.start(t);
+    sub.start(t);
+    osc.stop(t + release + 0.02);
+    sub.stop(t + release + 0.02);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function playSupersawTick(speed) {
+  if (!audioReady || !audioCtx) {
+    return;
+  }
+
+  try {
+    const t = audioCtx.currentTime;
+    const detunes = [-14, -7, 0, 7, 14];
+    const oscs = [];
+    const ampMod = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const voiceFilter = createVoiceModFilter(t);
+    const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
+    const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
+    const release = getReleaseWithLfo(envelopeReleaseSeconds * 1.1, t, 0.03, 1.4);
+    const lfoDuration = release + 0.03;
+    const detuneParams = [];
+
+    for (let i = 0; i < detunes.length; i += 1) {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(baseFreq, t);
+      osc.detune.setValueAtTime(detunes[i], t);
+      osc.connect(voiceFilter.input);
+      oscs.push(osc);
+      detuneParams.push(osc.detune);
+    }
+
+    ampMod.gain.setValueAtTime(1, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.009 + brightness * 0.008, t + 0.007);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
+
+    applyPitchLfo(detuneParams, t, lfoDuration);
+    applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
+    applyFilterLfo(voiceFilter, t, lfoDuration);
+
+    voiceFilter.output.connect(ampMod);
+    ampMod.connect(gain);
+    routeVoiceToMix(gain);
+    for (let i = 0; i < oscs.length; i += 1) {
+      oscs[i].start(t);
+      oscs[i].stop(t + release + 0.03);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function playFmBellTick(speed) {
+  if (!audioReady || !audioCtx) {
+    return;
+  }
+
+  try {
+    const t = audioCtx.currentTime;
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampMod = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const voiceFilter = createVoiceModFilter(t);
+    const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
+    const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
+    const release = getReleaseWithLfo(envelopeReleaseSeconds * 1.25, t, 0.04, 1.8);
+    const lfoDuration = release + 0.04;
+
+    carrier.type = "sine";
+    mod.type = "sine";
+    carrier.frequency.setValueAtTime(baseFreq, t);
+    mod.frequency.setValueAtTime(baseFreq * 2.8, t);
+    modGain.gain.setValueAtTime(baseFreq * (2.2 + brightness * 1.8), t);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(1, baseFreq * 0.12), t + release);
+
+    ampMod.gain.setValueAtTime(1, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.015 + brightness * 0.012, t + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
+
+    applyPitchLfo([carrier.detune, mod.detune], t, lfoDuration);
+    applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
+    applyFilterLfo(voiceFilter, t, lfoDuration);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+    carrier.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
+    ampMod.connect(gain);
+    routeVoiceToMix(gain);
+    carrier.start(t);
+    mod.start(t);
+    carrier.stop(t + release + 0.04);
+    mod.stop(t + release + 0.04);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function playPluckTick(speed) {
+  if (!audioReady || !audioCtx) {
+    return;
+  }
+
+  try {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const body = audioCtx.createBiquadFilter();
+    const ampMod = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const voiceFilter = createVoiceModFilter(t);
+    const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
+    const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
+    const release = getReleaseWithLfo(envelopeReleaseSeconds * 0.55, t, 0.02, 0.5);
+    const lfoDuration = release + 0.02;
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(baseFreq, t);
+    body.type = "bandpass";
+    body.frequency.setValueAtTime(Math.min(12000, baseFreq * (3.5 + brightness * 1.8)), t);
+    body.Q.setValueAtTime(1.8 + brightness * 2.4, t);
+
+    ampMod.gain.setValueAtTime(1, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.017 + brightness * 0.01, t + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
+
+    applyPitchLfo([osc.detune], t, lfoDuration);
+    applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
+    applyFilterLfo(voiceFilter, t, lfoDuration);
+
+    osc.connect(body);
+    body.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
+    ampMod.connect(gain);
+    routeVoiceToMix(gain);
+    osc.start(t);
+    osc.stop(t + release + 0.02);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function playNoiseTick(speed) {
+  if (!audioReady || !audioCtx || !noiseBuffer) {
+    return;
+  }
+
+  try {
+    const t = audioCtx.currentTime;
+    const src = audioCtx.createBufferSource();
+    const body = audioCtx.createBiquadFilter();
+    const ampMod = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const voiceFilter = createVoiceModFilter(t);
+    const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
+    const release = getReleaseWithLfo(envelopeReleaseSeconds * 0.4, t, 0.02, 0.38);
+    const lfoDuration = release + 0.02;
+
+    src.buffer = noiseBuffer;
+    src.loop = false;
+    body.type = "bandpass";
+    body.frequency.setValueAtTime(600 + brightness * 2600, t);
+    body.Q.setValueAtTime(1.4 + brightness * 2.2, t);
+
+    ampMod.gain.setValueAtTime(1, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.02 + brightness * 0.016, t + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
+
+    applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
+    applyFilterLfo(voiceFilter, t, lfoDuration);
+
+    src.connect(body);
+    body.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
+    ampMod.connect(gain);
+    routeVoiceToMix(gain);
+    src.start(t);
+    src.stop(t + release + 0.03);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function playTick(speed) {
   if (muted) {
     return;
@@ -2296,11 +3235,60 @@ function playTick(speed) {
 
   if (soundSourceMode === "monotone") {
     playMonotoneTick(speed);
-  } else if (soundSourceMode === "ocarina") {
-    playOcarinaTick(speed);
-  } else {
-    playArpTick(speed);
+    return;
   }
+
+  if (soundSourceMode === "ocarina") {
+    playOcarinaTick(speed);
+    return;
+  }
+
+  if (soundSourceMode === "waveSine") {
+    playWaveformTick(speed, "sine", soundSourceMode);
+    return;
+  }
+
+  if (soundSourceMode === "waveTriangle") {
+    playWaveformTick(speed, "triangle", soundSourceMode);
+    return;
+  }
+
+  if (soundSourceMode === "waveSaw") {
+    playWaveformTick(speed, "sawtooth", soundSourceMode);
+    return;
+  }
+
+  if (soundSourceMode === "waveSquare") {
+    playWaveformTick(speed, "square", soundSourceMode);
+    return;
+  }
+
+  if (soundSourceMode === "wavePulse") {
+    playPulseTick(speed);
+    return;
+  }
+
+  if (soundSourceMode === "waveSupersaw") {
+    playSupersawTick(speed);
+    return;
+  }
+
+  if (soundSourceMode === "waveFmBell") {
+    playFmBellTick(speed);
+    return;
+  }
+
+  if (soundSourceMode === "wavePluck") {
+    playPluckTick(speed);
+    return;
+  }
+
+  if (soundSourceMode === "waveNoise") {
+    playNoiseTick(speed);
+    return;
+  }
+
+  playArpTick(speed);
 }
 
 let lastHapticTime = 0;
@@ -2311,6 +3299,9 @@ let lastBassNoteTime = 0;
 const minArpTickMs = 24;
 const minMonotoneTickMs = 54;
 const minOcarinaTickMs = 62;
+const minSupersawTickMs = 40;
+const minFmTickMs = 46;
+const minNoiseTickMs = 32;
 const minBassTickMs = 180;
 
 function pulseHaptic(pattern) {
@@ -2363,6 +3354,12 @@ function triggerSpinBeat(now, speed) {
     minGap = minMonotoneTickMs;
   } else if (soundSourceMode === "ocarina") {
     minGap = minOcarinaTickMs;
+  } else if (soundSourceMode === "waveSupersaw") {
+    minGap = minSupersawTickMs;
+  } else if (soundSourceMode === "waveFmBell") {
+    minGap = minFmTickMs;
+  } else if (soundSourceMode === "waveNoise") {
+    minGap = minNoiseTickMs;
   }
 
   if (now - lastAudioTickTime >= minGap) {
@@ -2420,10 +3417,10 @@ function playBassTick(speed) {
 
     osc.connect(body);
     sub.connect(body);
-    body.connect(voiceFilter);
-    voiceFilter.connect(ampMod);
+    body.connect(voiceFilter.input);
+    voiceFilter.output.connect(ampMod);
     ampMod.connect(gain);
-    routeVoiceToMix(gain);
+    routeVoiceToMix(gain, false);
     osc.start(t);
     sub.start(t);
     osc.stop(t + release + 0.05);
@@ -2437,6 +3434,13 @@ const clock = new THREE.Clock();
 function animate() {
   const dt = Math.min(clock.getDelta(), 1 / 20);
   const now = performance.now();
+
+  updateBeatRepeater(dt);
+
+  if (delayNode && audioCtx) {
+    const modulatedDelay = getModulatedDelayTimeSeconds(audioCtx.currentTime);
+    delayNode.delayTime.setTargetAtTime(modulatedDelay, audioCtx.currentTime, 0.01);
+  }
 
   const userSpinSpeed = Math.abs(gestureAngularVelocity);
   const speedNorm = THREE.MathUtils.clamp(userSpinSpeed / maxSpin, 0, 1);
@@ -2512,7 +3516,7 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("pointerdown", () => {
   unlockAudio().catch(() => {
-    statusEl.textContent = "Audio blocked by browser. Keep interacting to enable sound.";
+    showToast("Audio blocked by browser. Keep interacting to enable sound.");
   });
 
   if (isNativeCapacitor && nativeHaptics) {
@@ -2521,7 +3525,7 @@ window.addEventListener("pointerdown", () => {
   } else if (hapticsAvailable) {
     pulseHaptic(12);
   } else if (!canVibrate) {
-    statusEl.textContent = "Vibration not available in this browser/device.";
+    showToast("Vibration not available in this browser/device.");
   }
 });
 
@@ -2529,11 +3533,11 @@ if (motionBtn) {
   motionBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
     unlockAudio().catch(() => {
-      statusEl.textContent = "Audio blocked by browser. Keep interacting to enable sound.";
+      showToast("Audio blocked by browser. Keep interacting to enable sound.");
     });
 
     toggleMotion().catch(() => {
-      statusEl.textContent = "Motion unavailable on this device/browser.";
+      showToast("Motion unavailable on this device/browser.");
     });
   });
 }
@@ -2580,12 +3584,29 @@ if (delayAmountSlider) {
 if (lfoShapeSelect) {
   lfoShapeSelect.addEventListener("change", () => {
     lfoShape = lfoShapeSelect.value;
+    renderLfoShapePreview(lfoShapePreview1, lfoShape);
   });
+  renderLfoShapePreview(lfoShapePreview1, lfoShape);
+}
+
+if (lfoShapeSelect2) {
+  lfoShapeSelect2.addEventListener("change", () => {
+    lfoShape2 = lfoShapeSelect2.value;
+    renderLfoShapePreview(lfoShapePreview2, lfoShape2);
+  });
+  renderLfoShapePreview(lfoShapePreview2, lfoShape2);
 }
 
 if (lfoRateSelect) {
   lfoRateSelect.addEventListener("change", () => {
     lfoRateDivision = THREE.MathUtils.clamp(Number(lfoRateSelect.value), 0.5, 128);
+    updateFxLabels();
+  });
+}
+
+if (lfoRateSelect2) {
+  lfoRateSelect2.addEventListener("change", () => {
+    lfoRateDivision2 = THREE.MathUtils.clamp(Number(lfoRateSelect2.value), 0.5, 128);
     updateFxLabels();
   });
 }
@@ -2597,22 +3618,105 @@ if (lfoAmountSlider) {
   });
 }
 
+if (lfoAmountSlider2) {
+  lfoAmountSlider2.addEventListener("input", () => {
+    lfoAmount2 = THREE.MathUtils.clamp(Number(lfoAmountSlider2.value) / 100, 0, 1);
+    updateFxLabels();
+  });
+}
+
 if (lfoTargetSelect) {
   lfoTargetSelect.addEventListener("change", () => {
     lfoTarget = lfoTargetSelect.value;
   });
 }
 
-if (modFilterTypeSelect) {
-  modFilterTypeSelect.addEventListener("change", () => {
-    modFilterType = modFilterTypeSelect.value;
+if (lfoTargetSelect2) {
+  lfoTargetSelect2.addEventListener("change", () => {
+    lfoTarget2 = lfoTargetSelect2.value;
+  });
+}
+
+if (beatRepeaterToggle) {
+  beatRepeaterEnabled = beatRepeaterToggle.checked;
+  beatRepeaterToggle.addEventListener("change", () => {
+    beatRepeaterEnabled = beatRepeaterToggle.checked;
+    beatRepeaterCycleElapsed = 0;
+    if (!beatRepeaterEnabled) {
+      setBeatRepeaterMode("bypass");
+    }
+    showToast(beatRepeaterEnabled ? "Beat Repeater on (main spinner only)." : "Beat Repeater off.");
+  });
+}
+
+if (beatRepeaterIntervalSelect) {
+  beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect.value), 2, 8);
+  beatRepeaterIntervalSelect.addEventListener("change", () => {
+    beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect.value), 2, 8);
+    beatRepeaterCycleElapsed = 0;
+  });
+}
+
+if (beatRepeaterGridSelect) {
+  beatRepeaterGridDivision = THREE.MathUtils.clamp(Number(beatRepeaterGridSelect.value), 16, 64);
+  beatRepeaterGridSelect.addEventListener("change", () => {
+    beatRepeaterGridDivision = THREE.MathUtils.clamp(Number(beatRepeaterGridSelect.value), 16, 64);
+    beatRepeaterCycleElapsed = 0;
+  });
+}
+
+if (filter1TypeSelect) {
+  filter1TypeSelect.addEventListener("change", () => {
+    filter1Type = filter1TypeSelect.value;
     updateFxLabels();
   });
 }
 
-if (modFilterCutoffSlider) {
-  modFilterCutoffSlider.addEventListener("input", () => {
-    modFilterCutoffHz = THREE.MathUtils.clamp(Number(modFilterCutoffSlider.value), 120, 12000);
+if (filter1DepthSelect) {
+  filter1DepthSelect.addEventListener("change", () => {
+    filter1DepthDb = THREE.MathUtils.clamp(Number(filter1DepthSelect.value), 16, 48);
+    updateFxLabels();
+  });
+}
+
+if (filter1FreqSlider) {
+  filter1FreqSlider.addEventListener("input", () => {
+    filter1CutoffHz = THREE.MathUtils.clamp(Number(filter1FreqSlider.value), filterFreqMinHz, filterFreqMaxHz);
+    updateFxLabels();
+  });
+}
+
+if (filter1ResSlider) {
+  filter1ResSlider.addEventListener("input", () => {
+    filter1Resonance = THREE.MathUtils.clamp(Number(filter1ResSlider.value), filterResMin, filterResMax);
+    updateFxLabels();
+  });
+}
+
+if (filter2TypeSelect) {
+  filter2TypeSelect.addEventListener("change", () => {
+    filter2Type = filter2TypeSelect.value;
+    updateFxLabels();
+  });
+}
+
+if (filter2DepthSelect) {
+  filter2DepthSelect.addEventListener("change", () => {
+    filter2DepthDb = THREE.MathUtils.clamp(Number(filter2DepthSelect.value), 16, 48);
+    updateFxLabels();
+  });
+}
+
+if (filter2FreqSlider) {
+  filter2FreqSlider.addEventListener("input", () => {
+    filter2CutoffHz = THREE.MathUtils.clamp(Number(filter2FreqSlider.value), filterFreqMinHz, filterFreqMaxHz);
+    updateFxLabels();
+  });
+}
+
+if (filter2ResSlider) {
+  filter2ResSlider.addEventListener("input", () => {
+    filter2Resonance = THREE.MathUtils.clamp(Number(filter2ResSlider.value), filterResMin, filterResMax);
     updateFxLabels();
   });
 }

@@ -64,11 +64,11 @@ body {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 45px);
   z-index: 12;
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 4px;
   padding: 0 12px;
   pointer-events: auto;
 }
@@ -77,7 +77,7 @@ body {
   border: 1px solid rgba(118, 221, 255, 0.7);
   background: rgba(5, 17, 26, 0.72);
   color: #d3f6ff;
-  border-radius: 999px;
+  border-radius: 11px;
   font-size: 0.72rem;
   padding: 7px 14px;
 }
@@ -93,14 +93,18 @@ body {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 50px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 95px);
   z-index: 13;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
   padding: 0 12px;
-  pointer-events: none;
+  max-height: min(66vh, 560px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
+  touch-action: pan-y;
 }
 
 .modModal[hidden] {
@@ -117,7 +121,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   cursor: ew-resize;
 }
@@ -127,6 +131,46 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.lfoShapeLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lfoShapePreview {
+  width: 64px;
+  height: 18px;
+  border: 1px solid rgba(118, 221, 255, 0.38);
+  border-radius: 5px;
+  background: rgba(1, 7, 12, 0.75);
+}
+
+.filterColumn {
+  width: calc(50% - 5px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filterColumn .fxControl {
+  width: 100%;
+}
+
+.filterTypeDepthRow {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.filterTypeDepthCell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .fxControl label {
@@ -206,6 +250,7 @@ body {
 }
 
 #settingsBtn {
+  font-size:22px !important;
   pointer-events: auto;
   margin-left: 0;
 }
@@ -217,9 +262,12 @@ body {
 #transportInline {
   pointer-events: auto;
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  transform: none;
+  top: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 0px);
   margin-top: 0;
   display: flex;
   flex-wrap: wrap;
@@ -228,7 +276,7 @@ body {
   justify-content: center;
   padding: 6px 12px;
   border: 1px solid rgba(118, 221, 255, 0.45);
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(4, 10, 16, 0.7);
   z-index: 14;
 }
@@ -240,21 +288,34 @@ body {
 
 #transportInline input[type="number"] {
   width: 64px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  -webkit-appearance: none;
   border: 1px solid rgba(118, 221, 255, 0.6);
   background: rgba(1, 7, 12, 0.9);
   color: #c9f3ff;
   border-radius: 999px;
   font-size: 0.72rem;
-  padding: 3px 8px;
+  padding: 3px 6px;
+}
+
+#transportInline input[type="number"]::-webkit-outer-spin-button,
+#transportInline input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 #transportInline select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
   border: 1px solid rgba(118, 221, 255, 0.6);
   background: rgba(1, 7, 12, 0.9);
   color: #c9f3ff;
   border-radius: 999px;
   font-size: 0.72rem;
-  padding: 3px 9px;
+  padding: 3px 7px;
 }
 
 #transportInline button {
@@ -280,12 +341,10 @@ body {
 }
 
 #arpPanel {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 50px);
   z-index: 13;
 }
 
 #bassPanel {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 50px);
   z-index: 13;
   display: flex;
   flex-direction: column;
