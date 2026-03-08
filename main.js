@@ -28,6 +28,10 @@ const muteToggle = document.getElementById("muteToggle");
 const hapticsToggle = document.getElementById("hapticsToggle");
 const volumeSlider = document.getElementById("volumeSlider");
 const volumeValue = document.getElementById("volumeValue");
+const presetSelect = document.getElementById("presetSelect");
+const savePresetBtn = document.getElementById("savePresetBtn");
+const renamePresetBtn = document.getElementById("renamePresetBtn");
+const deletePresetBtn = document.getElementById("deletePresetBtn");
 const rootNoteSelect = document.getElementById("rootNoteSelect");
 const scaleSelect = document.getElementById("scaleSelect");
 const wingCountSlider = document.getElementById("wingCountSlider");
@@ -51,6 +55,10 @@ const bassPitchValue = document.getElementById("bassPitchValue");
 const bassEnvReleaseSlider = document.getElementById("bassEnvReleaseSlider");
 const bassEnvReleaseValue = document.getElementById("bassEnvReleaseValue");
 const arpDirectionSelect = document.getElementById("arpDirectionSelect");
+const arpDistanceSlider = document.getElementById("arpDistanceSlider");
+const arpDistanceValue = document.getElementById("arpDistanceValue");
+const arpGateSlider = document.getElementById("arpGateSlider");
+const arpGateValue = document.getElementById("arpGateValue");
 const reverbDecaySlider = document.getElementById("reverbDecaySlider");
 const reverbDecayValue = document.getElementById("reverbDecayValue");
 const envReleaseSlider = document.getElementById("envReleaseSlider");
@@ -62,6 +70,7 @@ const delayAmountValue = document.getElementById("delayAmountValue");
 const beatRepeaterToggle = document.getElementById("beatRepeaterToggle");
 const beatRepeaterIntervalSelect = document.getElementById("beatRepeaterIntervalSelect");
 const beatRepeaterGridSelect = document.getElementById("beatRepeaterGridSelect");
+const beatRepHoldBtn = document.getElementById("beatRepHoldBtn");
 const stepsSlider = document.getElementById("stepsSlider");
 const stepsValue = document.getElementById("stepsValue");
 const pitchSemitoneSlider = document.getElementById("pitchSemitoneSlider");
@@ -103,13 +112,359 @@ let arpOpen = false;
 let bassOpen = false;
 let toastHideTimer = null;
 let toastClearTimer = null;
+const PRESET_STORAGE_KEY = "fidget-spinna.presets.v1";
+const PRESET_BUNDLE_URL = "./presets.bundle.json";
+let savedPresets = [];
+
+const PRESET_CONTROL_DEFS = [
+  { key: "soundSourceMode", element: soundSourceSelect, eventName: "change", kind: "value" },
+  { key: "muted", element: muteToggle, eventName: "change", kind: "checked" },
+  { key: "noHaptics", element: hapticsToggle, eventName: "change", kind: "checked" },
+  { key: "masterVolume", element: volumeSlider, eventName: "input", kind: "value" },
+  { key: "tempoBpm", element: tempoInput, eventName: "input", kind: "value" },
+  { key: "minArpRate", element: minArpRateSelect, eventName: "change", kind: "value" },
+  { key: "maxArpRate", element: maxArpRateSelect, eventName: "change", kind: "value" },
+  { key: "rootNote", element: rootNoteSelect, eventName: "change", kind: "value" },
+  { key: "scale", element: scaleSelect, eventName: "change", kind: "value" },
+  { key: "wingCount", element: wingCountSlider, eventName: "input", kind: "value" },
+  { key: "octaveRange", element: octaveRangeSlider, eventName: "input", kind: "value" },
+  { key: "baseOctave", element: baseOctaveSlider, eventName: "input", kind: "value" },
+  { key: "arpDirection", element: arpDirectionSelect, eventName: "change", kind: "value" },
+  { key: "arpDistance", element: arpDistanceSlider, eventName: "input", kind: "value" },
+  { key: "arpGate", element: arpGateSlider, eventName: "input", kind: "value" },
+  { key: "bassEnabled", element: bassEngineToggle, eventName: "change", kind: "checked" },
+  { key: "bassInvertScale", element: bassInvertScaleToggle, eventName: "change", kind: "checked" },
+  { key: "bassToneLocked", element: bassLockToneToggle, eventName: "change", kind: "checked" },
+  { key: "bassStepsLocked", element: bassLockStepsToggle, eventName: "change", kind: "checked" },
+  { key: "bassReleaseLocked", element: bassLockReleaseToggle, eventName: "change", kind: "checked" },
+  { key: "bassSteps", element: bassStepsSlider, eventName: "input", kind: "value" },
+  { key: "bassPitch", element: bassPitchSlider, eventName: "input", kind: "value" },
+  { key: "bassRelease", element: bassEnvReleaseSlider, eventName: "input", kind: "value" },
+  { key: "reverbDecay", element: reverbDecaySlider, eventName: "input", kind: "value" },
+  { key: "envRelease", element: envReleaseSlider, eventName: "input", kind: "value" },
+  { key: "delayTime", element: delayTimeSlider, eventName: "input", kind: "value" },
+  { key: "delayAmount", element: delayAmountSlider, eventName: "input", kind: "value" },
+  { key: "pitchSemitone", element: pitchSemitoneSlider, eventName: "input", kind: "value" },
+  { key: "beatRepeaterEnabled", element: beatRepeaterToggle, eventName: "change", kind: "checked" },
+  { key: "beatRepeaterInterval", element: beatRepeaterIntervalSelect, eventName: "change", kind: "value" },
+  { key: "beatRepeaterGrid", element: beatRepeaterGridSelect, eventName: "change", kind: "value" },
+  { key: "lfoShape1", element: lfoShapeSelect, eventName: "change", kind: "value" },
+  { key: "lfoRate1", element: lfoRateSelect, eventName: "change", kind: "value" },
+  { key: "lfoAmount1", element: lfoAmountSlider, eventName: "input", kind: "value" },
+  { key: "lfoTarget1", element: lfoTargetSelect, eventName: "change", kind: "value" },
+  { key: "lfoShape2", element: lfoShapeSelect2, eventName: "change", kind: "value" },
+  { key: "lfoRate2", element: lfoRateSelect2, eventName: "change", kind: "value" },
+  { key: "lfoAmount2", element: lfoAmountSlider2, eventName: "input", kind: "value" },
+  { key: "lfoTarget2", element: lfoTargetSelect2, eventName: "change", kind: "value" },
+  { key: "filter1Type", element: filter1TypeSelect, eventName: "change", kind: "value" },
+  { key: "filter1Depth", element: filter1DepthSelect, eventName: "change", kind: "value" },
+  { key: "filter1Freq", element: filter1FreqSlider, eventName: "input", kind: "value" },
+  { key: "filter1Res", element: filter1ResSlider, eventName: "input", kind: "value" },
+  { key: "filter2Type", element: filter2TypeSelect, eventName: "change", kind: "value" },
+  { key: "filter2Depth", element: filter2DepthSelect, eventName: "change", kind: "value" },
+  { key: "filter2Freq", element: filter2FreqSlider, eventName: "input", kind: "value" },
+  { key: "filter2Res", element: filter2ResSlider, eventName: "input", kind: "value" },
+];
+
+function capturePresetValues() {
+  const values = {};
+
+  for (const def of PRESET_CONTROL_DEFS) {
+    if (!def.element) {
+      continue;
+    }
+    values[def.key] = def.kind === "checked" ? !!def.element.checked : String(def.element.value);
+  }
+
+  return values;
+}
+
+function applyPresetValues(values) {
+  if (!values || typeof values !== "object") {
+    return false;
+  }
+
+  for (const def of PRESET_CONTROL_DEFS) {
+    if (!def.element || !(def.key in values)) {
+      continue;
+    }
+
+    const nextValue = values[def.key];
+    if (def.kind === "checked") {
+      const checked = !!nextValue;
+      if (def.element.checked === checked) {
+        continue;
+      }
+      def.element.checked = checked;
+    } else {
+      const stringValue = String(nextValue);
+      if (def.element.value === stringValue) {
+        continue;
+      }
+      def.element.value = stringValue;
+    }
+
+    def.element.dispatchEvent(new Event(def.eventName, { bubbles: true }));
+  }
+
+  return true;
+}
+
+function normalizePresetList(candidatePresets) {
+  if (!Array.isArray(candidatePresets)) {
+    return [];
+  }
+
+  return candidatePresets
+    .filter((preset) => {
+      return preset && typeof preset.name === "string" && preset.name.trim() && preset.values && typeof preset.values === "object";
+    })
+    .map((preset) => ({
+      name: preset.name.trim(),
+      values: preset.values,
+      updatedAt: Number.isFinite(Number(preset.updatedAt)) ? Number(preset.updatedAt) : Date.now(),
+    }));
+}
+
+function loadPresetList() {
+  try {
+    const raw = globalThis.localStorage ? globalThis.localStorage.getItem(PRESET_STORAGE_KEY) : null;
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    return normalizePresetList(parsed);
+  } catch (error) {
+    console.warn("Could not load presets", error);
+    return [];
+  }
+}
+
+async function loadBundledPresetList() {
+  try {
+    const response = await fetch(PRESET_BUNDLE_URL, { cache: "no-store" });
+    if (!response.ok) {
+      return [];
+    }
+    const parsed = await response.json();
+    return normalizePresetList(parsed);
+  } catch (error) {
+    return [];
+  }
+}
+
+function mergePresetLists(bundledPresets, localPresets) {
+  const mergedByKey = new Map();
+  for (const preset of bundledPresets) {
+    mergedByKey.set(preset.name.toLowerCase(), preset);
+  }
+  for (const preset of localPresets) {
+    mergedByKey.set(preset.name.toLowerCase(), preset);
+  }
+  return Array.from(mergedByKey.values());
+}
+
+function savePresetList() {
+  try {
+    if (!globalThis.localStorage) {
+      return;
+    }
+    globalThis.localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(savedPresets));
+  } catch (error) {
+    console.warn("Could not save presets", error);
+  }
+}
+
+function renderPresetSelect(selectedName = "") {
+  if (!presetSelect) {
+    return;
+  }
+
+  presetSelect.innerHTML = "";
+
+  if (!savedPresets.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No presets yet";
+    option.disabled = true;
+    option.selected = true;
+    presetSelect.appendChild(option);
+    presetSelect.disabled = true;
+    return;
+  }
+
+  presetSelect.disabled = false;
+  for (const preset of savedPresets) {
+    const option = document.createElement("option");
+    option.value = preset.name;
+    option.textContent = preset.name;
+    presetSelect.appendChild(option);
+  }
+
+  const requestedName = selectedName || savedPresets[0].name;
+  const hasRequested = savedPresets.some((preset) => preset.name === requestedName);
+  presetSelect.value = hasRequested ? requestedName : savedPresets[0].name;
+}
+
+function syncPresetActionButtons() {
+  const hasPresets = savedPresets.length > 0;
+  if (renamePresetBtn) {
+    renamePresetBtn.disabled = !hasPresets;
+  }
+  if (deletePresetBtn) {
+    deletePresetBtn.disabled = !hasPresets;
+  }
+}
+
+function findPresetByName(name) {
+  if (!name) {
+    return null;
+  }
+  return savedPresets.find((entry) => entry.name === name) || null;
+}
+
+async function setupPresetSystem() {
+  if (!presetSelect || !savePresetBtn) {
+    return;
+  }
+
+  const localPresets = loadPresetList();
+  const bundledPresets = await loadBundledPresetList();
+  savedPresets = mergePresetLists(bundledPresets, localPresets).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  if (savedPresets.length !== localPresets.length) {
+    savePresetList();
+  }
+  renderPresetSelect();
+  syncPresetActionButtons();
+
+  savePresetBtn.addEventListener("click", () => {
+    const seedName = presetSelect.disabled ? "" : presetSelect.value;
+    const rawName = globalThis.prompt("Preset name", seedName || "");
+    if (rawName == null) {
+      return;
+    }
+
+    const presetName = rawName.trim();
+    if (!presetName) {
+      showToast("Preset name is required.");
+      return;
+    }
+
+    const index = savedPresets.findIndex((preset) => preset.name.toLowerCase() === presetName.toLowerCase());
+    if (index >= 0) {
+      const confirmed = globalThis.confirm(`Overwrite preset "${savedPresets[index].name}"?`);
+      if (!confirmed) {
+        return;
+      }
+      savedPresets[index] = { name: presetName, values: capturePresetValues(), updatedAt: Date.now() };
+    } else {
+      savedPresets.push({ name: presetName, values: capturePresetValues(), updatedAt: Date.now() });
+    }
+
+    savedPresets.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    savePresetList();
+    renderPresetSelect(presetName);
+    syncPresetActionButtons();
+    showToast(`Preset saved: ${presetName}.`);
+  });
+
+  if (renamePresetBtn) {
+    renamePresetBtn.addEventListener("click", () => {
+      const selectedName = presetSelect.value;
+      const preset = findPresetByName(selectedName);
+      if (!preset) {
+        showToast("No preset selected.");
+        return;
+      }
+
+      const rawName = globalThis.prompt("Rename preset", preset.name);
+      if (rawName == null) {
+        return;
+      }
+
+      const nextName = rawName.trim();
+      if (!nextName) {
+        showToast("Preset name is required.");
+        return;
+      }
+
+      const nameTaken = savedPresets.some((entry) => {
+        return entry !== preset && entry.name.toLowerCase() === nextName.toLowerCase();
+      });
+
+      if (nameTaken) {
+        showToast(`Preset name already exists: ${nextName}.`);
+        return;
+      }
+
+      preset.name = nextName;
+      preset.updatedAt = Date.now();
+      savedPresets.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+      savePresetList();
+      renderPresetSelect(nextName);
+      syncPresetActionButtons();
+      showToast(`Preset renamed: ${nextName}.`);
+    });
+  }
+
+  if (deletePresetBtn) {
+    deletePresetBtn.addEventListener("click", () => {
+      const selectedName = presetSelect.value;
+      const preset = findPresetByName(selectedName);
+      if (!preset) {
+        showToast("No preset selected.");
+        return;
+      }
+
+      const confirmed = globalThis.confirm(`Delete preset "${preset.name}"?`);
+      if (!confirmed) {
+        return;
+      }
+
+      savedPresets = savedPresets.filter((entry) => entry !== preset);
+      savePresetList();
+      renderPresetSelect();
+      syncPresetActionButtons();
+      showToast(`Preset deleted: ${preset.name}.`);
+    });
+  }
+
+  presetSelect.addEventListener("change", () => {
+    const presetName = presetSelect.value;
+    const preset = findPresetByName(presetName);
+    if (!preset) {
+      return;
+    }
+    applyPresetValues(preset.values);
+    showToast(`Preset loaded: ${preset.name}.`);
+  });
+}
 
 function showToast(message, visibleMs = 1800) {
   if (!statusEl) {
     return;
   }
 
-  statusEl.innerText = String(message || "");
+  const text = message == null ? "" : String(message).trim();
+
+  if (!text) {
+    if (toastHideTimer) {
+      clearTimeout(toastHideTimer);
+      toastHideTimer = null;
+    }
+    if (toastClearTimer) {
+      clearTimeout(toastClearTimer);
+      toastClearTimer = null;
+    }
+    statusEl.classList.remove("toastVisible", "toastHiding");
+    statusEl.innerText = "";
+    statusEl.hidden = true;
+    return;
+  }
+
+  statusEl.hidden = false;
+  statusEl.innerText = text;
   statusEl.classList.remove("toastVisible", "toastHiding");
   void statusEl.offsetWidth;
   statusEl.classList.add("toastVisible");
@@ -122,14 +477,19 @@ function showToast(message, visibleMs = 1800) {
   }
 
   toastHideTimer = setTimeout(() => {
+    toastHideTimer = null;
     statusEl.classList.remove("toastVisible");
     statusEl.classList.add("toastHiding");
     toastClearTimer = setTimeout(() => {
+      toastClearTimer = null;
       statusEl.classList.remove("toastHiding");
       statusEl.innerText = "";
+      statusEl.hidden = true;
     }, 360);
   }, Math.max(500, visibleMs));
 }
+
+showToast("Tap and drag around center to spin.", 2200);
 
 function syncDockButtonStates() {
   if (settingsBtn) {
@@ -166,25 +526,60 @@ function syncDockButtonStates() {
   }
 }
 
+const PANEL_FADE_MS = 180;
+const panelFadeTimers = new WeakMap();
+
+function setPanelOpen(panelEl, open, forceFlex = false) {
+  if (!panelEl) {
+    return;
+  }
+
+  const pendingTimer = panelFadeTimers.get(panelEl);
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    panelFadeTimers.delete(panelEl);
+  }
+
+  if (open) {
+    panelEl.hidden = false;
+    if (forceFlex) {
+      panelEl.style.display = "flex";
+    }
+    panelEl.classList.remove("isPanelClosing");
+    requestAnimationFrame(() => {
+      panelEl.classList.add("isPanelOpen");
+    });
+    return;
+  }
+
+  panelEl.classList.remove("isPanelOpen");
+  panelEl.classList.add("isPanelClosing");
+  const timer = setTimeout(() => {
+    panelEl.hidden = true;
+    panelEl.classList.remove("isPanelClosing");
+    if (forceFlex) {
+      panelEl.style.removeProperty("display");
+    }
+    panelFadeTimers.delete(panelEl);
+  }, PANEL_FADE_MS);
+  panelFadeTimers.set(panelEl, timer);
+}
+
 function setSettingsOpen(open) {
   settingsOpen = open;
-  settingsPanel.hidden = !open;
+  setPanelOpen(settingsPanel, open, false);
   syncDockButtonStates();
 }
 
 function setArpOpen(open) {
   arpOpen = open;
-  if (arpPanel) {
-    arpPanel.hidden = !open;
-  }
+  setPanelOpen(arpPanel, open, false);
   syncDockButtonStates();
 }
 
 function setBassOpen(open) {
   bassOpen = open;
-  if (bassPanel) {
-    bassPanel.hidden = !open;
-  }
+  setPanelOpen(bassPanel, open, false);
   syncDockButtonStates();
 }
 
@@ -258,37 +653,25 @@ if (bassPanel) {
 
 function setFxModalOpen(open) {
   if (!fxModal) return;
-  fxModal.hidden = !open;
+  setPanelOpen(fxModal, open, true);
   syncDockButtonStates();
 }
 
 function setFilterModalOpen(open) {
   if (!filterModal) return;
-  filterModal.hidden = !open;
+  setPanelOpen(filterModal, open, true);
   syncDockButtonStates();
 }
 
 function setMod1ModalOpen(open) {
   if (!mod1Modal) return;
-  if (open) {
-    mod1Modal.removeAttribute("hidden");
-    mod1Modal.style.display = "flex";
-  } else {
-    mod1Modal.setAttribute("hidden", "");
-    mod1Modal.style.removeProperty("display");
-  }
+  setPanelOpen(mod1Modal, open, true);
   syncDockButtonStates();
 }
 
 function setMod2ModalOpen(open) {
   if (!mod2Modal) return;
-  if (open) {
-    mod2Modal.removeAttribute("hidden");
-    mod2Modal.style.display = "flex";
-  } else {
-    mod2Modal.setAttribute("hidden", "");
-    mod2Modal.style.removeProperty("display");
-  }
+  setPanelOpen(mod2Modal, open, true);
   syncDockButtonStates();
 }
 
@@ -306,7 +689,7 @@ function canToggleModNow() {
 if (fxModBtn) {
   fxModBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
-    const willOpen = fxModal ? fxModal.hidden : false;
+    const willOpen = fxModal ? !fxModal.classList.contains("isPanelOpen") : false;
     setFxModalOpen(willOpen);
     if (willOpen) {
       setFilterModalOpen(false);
@@ -322,7 +705,7 @@ if (fxModBtn) {
 if (filterBtn) {
   filterBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
-    const willOpen = filterModal ? filterModal.hidden : false;
+    const willOpen = filterModal ? !filterModal.classList.contains("isPanelOpen") : false;
     setFilterModalOpen(willOpen);
     if (willOpen) {
       setFxModalOpen(false);
@@ -341,7 +724,7 @@ if (mod1Btn) {
       return;
     }
     event.stopPropagation();
-    const willOpen = mod1Modal ? mod1Modal.hidden : false;
+    const willOpen = mod1Modal ? !mod1Modal.classList.contains("isPanelOpen") : false;
     setMod1ModalOpen(willOpen);
     if (willOpen) {
       setFilterModalOpen(false);
@@ -363,7 +746,7 @@ if (mod2Btn) {
       return;
     }
     event.stopPropagation();
-    const willOpen = mod2Modal ? mod2Modal.hidden : false;
+    const willOpen = mod2Modal ? !mod2Modal.classList.contains("isPanelOpen") : false;
     setMod2ModalOpen(willOpen);
     if (willOpen) {
       setFilterModalOpen(false);
@@ -514,14 +897,118 @@ function polygon(sides, radius, z = 0, rotation = 0, material = lineMaterial) {
   return new THREE.Line(geom, material);
 }
 
-let wingCount = THREE.MathUtils.clamp(Number(stepsSlider ? stepsSlider.value : wingCountSlider ? wingCountSlider.value : 6), 3, 9);
+let wingCount = THREE.MathUtils.clamp(Number(stepsSlider ? stepsSlider.value : wingCountSlider ? wingCountSlider.value : 6), 3, 12);
+let octaveRange = THREE.MathUtils.clamp(Number(octaveRangeSlider ? octaveRangeSlider.value : 0), 0, 10);
+const maxWingLabels = 12;
+let currentMainNoteMidi = null;
+
+function getRequestedVisualWingCount() {
+  return wingCount;
+}
+
+function getVisualWingCount() {
+  return wingCount;
+}
+
+function shouldHideMainWingLabels() {
+  return getVisualWingCount() > maxWingLabels;
+}
+
+function getWingLabelMidiAt(slotIndex) {
+  const pool = wingAssignedMidis;
+  if (!pool.length) {
+    return getDisplayedRootMidi();
+  }
+  const base = ((arpStep % pool.length) + pool.length) % pool.length;
+  const idx = (base + slotIndex) % pool.length;
+  return pool[idx];
+}
+
+function refreshMainWingLabelTexts() {
+  for (let i = 0; i < wingNoteLabelEls.length; i += 1) {
+    wingNoteLabelEls[i].textContent = midiToNoteNameWithOctave(getWingLabelMidiAt(i));
+  }
+}
+
+function createNearPolygonClipPath(pointCount = 7) {
+  const points = [];
+  for (let i = 0; i < pointCount; i += 1) {
+    const angle = (i / pointCount) * Math.PI * 2;
+    const jitter = (Math.random() * 0.06) - 0.03;
+    const xRadius = 0.42 + jitter * 0.55;
+    const yRadius = (0.46 + jitter) * 1.5;
+    const x = 50 + Math.cos(angle) * xRadius * 50;
+    const y = 50 + Math.sin(angle) * yRadius * 50;
+    points.push(`${x.toFixed(1)}% ${y.toFixed(1)}%`);
+  }
+  return `polygon(${points.join(", ")})`;
+}
+
+function updateCenterNoteLabelVisual() {
+  if (!rootNoteLabelEl) {
+    return;
+  }
+
+  const nextLabel = midiToNoteNameWithOctave(currentMainNoteMidi ?? getDisplayedRootMidi());
+  rootNoteLabelEl.classList.add("mainCenterLabel");
+  rootNoteLabelEl.style.clipPath = createNearPolygonClipPath(Math.random() > 0.5 ? 7 : 6);
+  rootNoteLabelEl.classList.remove("noteLabelPulse", "centerNoteSwap", "centerNoteBlackout");
+  if (centerNoteSwapTimer) {
+    clearTimeout(centerNoteSwapTimer);
+    centerNoteSwapTimer = null;
+  }
+  if (centerNoteSwapTimerLate) {
+    clearTimeout(centerNoteSwapTimerLate);
+    centerNoteSwapTimerLate = null;
+  }
+
+  // Flash tech-blue, then ultra-brief blackout before showing the next note.
+  rootNoteLabelEl.classList.add("centerNoteSwap");
+  centerNoteSwapTimer = setTimeout(() => {
+    if (!rootNoteLabelEl) {
+      return;
+    }
+    rootNoteLabelEl.classList.remove("centerNoteSwap");
+    rootNoteLabelEl.classList.add("centerNoteBlackout");
+    centerNoteSwapTimerLate = setTimeout(() => {
+      if (!rootNoteLabelEl) {
+        return;
+      }
+      rootNoteLabelEl.textContent = nextLabel;
+      rootNoteLabelEl.classList.remove("centerNoteBlackout");
+      rootNoteLabelEl.classList.add("noteLabelPulse");
+    }, 5);
+  }, 70);
+}
 
 function getArmRadiusForSteps(stepCount, scaleFactor = 1) {
-  const base = stepCount >= 8 ? 1.12 : stepCount >= 6 ? 1.08 : 1.05;
+  const base = stepCount >= 24
+    ? 1.24
+    : stepCount >= 18
+      ? 1.19
+      : stepCount >= 12
+        ? 1.15
+        : stepCount >= 8
+          ? 1.12
+          : stepCount >= 6
+            ? 1.08
+            : 1.05;
   return base * scaleFactor;
 }
 
 function getWingPolygonScale(stepCount) {
+  if (stepCount >= 24) {
+    return 0.38;
+  }
+  if (stepCount >= 18) {
+    return 0.48;
+  }
+  if (stepCount >= 15) {
+    return 0.58;
+  }
+  if (stepCount >= 12) {
+    return 0.68;
+  }
   if (stepCount >= 9) {
     return 0.8;
   }
@@ -531,7 +1018,7 @@ function getWingPolygonScale(stepCount) {
   return 1;
 }
 
-function makeFidgetSpinner(stepCount = wingCount, scaleFactor = 1) {
+function makeFidgetSpinner(stepCount = getVisualWingCount(), scaleFactor = 1) {
   const spinner = new THREE.Group();
   const wingScale = getWingPolygonScale(stepCount);
 
@@ -590,14 +1077,14 @@ let pulleyMainRadius = 0;
 let pulleyBassRadius = 0;
 
 function getDefaultBassStepCount() {
-  return THREE.MathUtils.clamp(Math.floor(wingCount / 2), 3, 9);
+  return THREE.MathUtils.clamp(Math.floor(wingCount / 2), 3, 12);
 }
 
 function getBassStepCount() {
   if (bassStepsLocked) {
     return getDefaultBassStepCount();
   }
-  return THREE.MathUtils.clamp(Math.round(bassManualStepCount), 3, 9);
+  return THREE.MathUtils.clamp(Math.round(bassManualStepCount), 3, 12);
 }
 
 function getBassSpinnerX() {
@@ -607,7 +1094,7 @@ function getBassSpinnerX() {
 function makePulleyVisual() {
   const group = new THREE.Group();
   const bassX = getBassSpinnerX();
-  pulleyMainRadius = getArmRadiusForSteps(wingCount, mainSpinnerScale);
+  pulleyMainRadius = getArmRadiusForSteps(getVisualWingCount(), mainSpinnerScale);
   pulleyBassRadius = getArmRadiusForSteps(getBassStepCount(), bassScaleFactor);
 
   pulleyMainRing = ring(pulleyMainRadius, 64, -0.02, softLineMaterial);
@@ -661,7 +1148,7 @@ function updatePulleyVisual(mainY, bassY) {
   setPulleyLinePoints(pulleyBottomBelt, mainSpinnerX, mainY - pulleyMainRadius, bassX, bassY - pulleyBassRadius);
 }
 
-let spinner = makeFidgetSpinner(wingCount, mainSpinnerScale);
+let spinner = makeFidgetSpinner(getVisualWingCount(), mainSpinnerScale);
 let bassSpinner = makeFidgetSpinner(getBassStepCount(), bassScaleFactor);
 let pulleyVisual = makePulleyVisual();
 spinner.position.x = mainSpinnerX;
@@ -1166,6 +1653,9 @@ let delayAmount = THREE.MathUtils.clamp(Number(delayAmountSlider ? delayAmountSl
 let arpStep = 0;
 let arpDirectionSign = 1;
 let arpDirectionMode = arpDirectionSelect ? arpDirectionSelect.value : "upOnly";
+let arpDistanceSemitones = THREE.MathUtils.clamp(Number(arpDistanceSlider ? arpDistanceSlider.value : 3), -24, 24);
+let arpGatePercent = THREE.MathUtils.clamp(Number(arpGateSlider ? arpGateSlider.value : 100), 5, 100);
+let currentArpIntervalSeconds = 0.25;
 let masterDryGain = null;
 let masterOutGain = null;
 let finalLimiter = null;
@@ -1220,9 +1710,11 @@ let currentArpRateExp = Math.log2(Math.max(1, Math.min(minArpRate, maxArpRate)))
 let arpClockAccumulator = 0;
 let bassTickCounter = 0;
 let beatRepeaterEnabled = false;
-let beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect ? beatRepeaterIntervalSelect.value : 4), 2, 8);
+let beatRepeaterHoldActive = false;
+let beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect ? beatRepeaterIntervalSelect.value : 4), 2, 16);
 let beatRepeaterGridDivision = THREE.MathUtils.clamp(Number(beatRepeaterGridSelect ? beatRepeaterGridSelect.value : 16), 16, 64);
 let beatRepeaterCycleElapsed = 0;
+let beatRepeaterStartAtTime = null;
 let beatRepeaterMode = "bypass";
 let pulsePeriodicWave = null;
 let noiseBuffer = null;
@@ -1264,7 +1756,7 @@ const SCALE_INTERVALS = {
 };
 
 const BASE_OCTAVE_MIDI = 48; // C3 base, root note transposed from this.
-let octaveRange = THREE.MathUtils.clamp(Number(octaveRangeSlider ? octaveRangeSlider.value : 2), 0, 10);
+octaveRange = THREE.MathUtils.clamp(Number(octaveRangeSlider ? octaveRangeSlider.value : 0), 0, 10);
 let baseOctaveShift = THREE.MathUtils.clamp(Number(baseOctaveSlider ? baseOctaveSlider.value : 0), -4, 4);
 let currentRootMidi = BASE_OCTAVE_MIDI + ROOT_NOTE_TO_SEMITONE[rootNoteSelect.value] + baseOctaveShift * 12;
 let wingAssignedMidis = [];
@@ -1276,6 +1768,8 @@ let rootNoteLabelEl = null;
 let wingNoteLabelEls = [];
 let bassRootNoteLabelEl = null;
 let bassWingNoteLabelEls = [];
+let centerNoteSwapTimer = null;
+let centerNoteSwapTimerLate = null;
 let pitchSemitoneOffset = THREE.MathUtils.clamp(Number(pitchSemitoneSlider ? pitchSemitoneSlider.value : 0), -24, 24);
 let bassPitchOffset = THREE.MathUtils.clamp(Number(bassPitchSlider ? bassPitchSlider.value : -12), -24, 24);
 const tmpWorld = new THREE.Vector3();
@@ -1478,6 +1972,19 @@ function getReleaseWithLfo(baseRelease, timeSec, minRelease = 0.02, maxRelease =
   const releaseAddSeconds = getCombinedTargetValueAtTime("ampRelease", timeSec) * lfoReleaseAddMaxSeconds;
   release += releaseAddSeconds;
   return THREE.MathUtils.clamp(release, minRelease, maxRelease + lfoReleaseAddMaxSeconds);
+}
+
+function getArpGateSeconds() {
+  const gateNorm = THREE.MathUtils.clamp(arpGatePercent / 100, 0.05, 1);
+  return Math.max(0.012, currentArpIntervalSeconds * gateNorm);
+}
+
+function getArpVoiceRelease(baseRelease, timeSec, minRelease = 0.02, maxRelease = 2.2) {
+  const release = getReleaseWithLfo(baseRelease, timeSec, minRelease, maxRelease);
+  if (arpGatePercent >= 100) {
+    return release;
+  }
+  return Math.min(release, getArpGateSeconds());
 }
 
 function getModulatedDelayTimeSeconds(timeSec) {
@@ -1749,47 +2256,81 @@ function clearNoteSprites() {
   bassWingNoteLabelEls = [];
 }
 
+function getQuantizeScaleIntervals() {
+  if (!scaleSelect || scaleSelect.value === "none") {
+    return null;
+  }
+  return SCALE_INTERVALS[scaleSelect.value] || SCALE_INTERVALS.minor;
+}
+
+function quantizeMidiToScaleNearest(midi, tonicMidi, scaleIntervals) {
+  if (!scaleIntervals || !scaleIntervals.length) {
+    return midi;
+  }
+
+  const tonicPc = ((tonicMidi % 12) + 12) % 12;
+  const allowedPitchClasses = scaleIntervals.map((interval) => (tonicPc + interval) % 12);
+  const notePc = ((midi % 12) + 12) % 12;
+  if (allowedPitchClasses.includes(notePc)) {
+    return midi;
+  }
+
+  for (let offset = 1; offset <= 11; offset += 1) {
+    const downPc = (((midi - offset) % 12) + 12) % 12;
+    const upPc = (((midi + offset) % 12) + 12) % 12;
+    const canDown = allowedPitchClasses.includes(downPc);
+    const canUp = allowedPitchClasses.includes(upPc);
+
+    if (canDown && canUp) {
+      return midi - offset;
+    }
+    if (canDown) {
+      return midi - offset;
+    }
+    if (canUp) {
+      return midi + offset;
+    }
+  }
+
+  return midi;
+}
+
 function buildWingNotesFromScale() {
-  const scale = SCALE_INTERVALS[scaleSelect.value] || SCALE_INTERVALS.minor;
+  const quantizeScale = getQuantizeScaleIntervals();
+  const baseNotes = [];
   const notes = [];
   const displayedRootMidi = getDisplayedRootMidi();
 
   for (let i = 0; i < wingCount; i += 1) {
-    const idx = i % scale.length;
-    const octaveLift = Math.floor(i / scale.length) * 12;
-    notes.push(displayedRootMidi + scale[idx] + octaveLift);
+    const rawMidi = displayedRootMidi + arpDistanceSemitones * (i + 1);
+    const quantizedMidi = quantizeMidiToScaleNearest(rawMidi, displayedRootMidi, quantizeScale);
+    baseNotes.push(quantizedMidi);
+  }
+
+  for (let octave = 0; octave <= octaveRange; octave += 1) {
+    const octaveOffset = octave * 12;
+    for (let i = 0; i < baseNotes.length; i += 1) {
+      notes.push(baseNotes[i] + octaveOffset);
+    }
   }
 
   return notes;
 }
 
 function buildBassNotesFromScale() {
-  const scale = SCALE_INTERVALS[scaleSelect.value] || SCALE_INTERVALS.minor;
-  const orderedScale = bassInvertScale ? [...scale].reverse() : scale;
+  const quantizeScale = getQuantizeScaleIntervals();
   const bassStepCount = getBassStepCount();
   const notes = [];
   const displayedRootMidi = getDisplayedRootMidi();
   const targetBassMidi = bassToneLocked ? displayedRootMidi - 24 : displayedRootMidi + bassPitchOffset;
 
-  let bestBass = displayedRootMidi - 24;
-  let bestDist = Number.POSITIVE_INFINITY;
-  for (let octave = -6; octave <= 2; octave += 1) {
-    const octaveOffset = octave * 12;
-    for (let i = 0; i < orderedScale.length; i += 1) {
-      const cand = displayedRootMidi + orderedScale[i] + octaveOffset;
-      const dist = Math.abs(cand - targetBassMidi);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestBass = cand;
-      }
-    }
-  }
-  bassRootMidi = bestBass;
+  bassRootMidi = quantizeMidiToScaleNearest(targetBassMidi, displayedRootMidi, quantizeScale);
+  const directionSign = bassInvertScale ? -1 : 1;
+  const stepDistance = Math.max(1, Math.abs(arpDistanceSemitones));
 
   for (let i = 0; i < bassStepCount; i += 1) {
-    const idx = i % orderedScale.length;
-    const octaveLift = Math.floor(i / orderedScale.length) * 12;
-    notes.push(bassRootMidi + orderedScale[idx] + octaveLift);
+    const rawMidi = bassRootMidi + directionSign * stepDistance * i;
+    notes.push(quantizeMidiToScaleNearest(rawMidi, displayedRootMidi, quantizeScale));
   }
 
   return notes;
@@ -1798,18 +2339,21 @@ function buildBassNotesFromScale() {
 function rebuildNoteSprites() {
   clearNoteSprites();
 
-  rootNoteLabelEl = makeNoteLabel(midiToNoteNameWithOctave(getDisplayedRootMidi()), true);
+  rootNoteLabelEl = makeNoteLabel(midiToNoteNameWithOctave(currentMainNoteMidi ?? getDisplayedRootMidi()), true);
   if (rootNoteLabelEl) {
+    rootNoteLabelEl.classList.add("mainCenterLabel");
     rootNoteLabelEl.style.display = "block";
   }
 
-  for (let i = 0; i < wingCount; i += 1) {
-    const label = makeNoteLabel(wingAssignedLabels[i] || "-");
-    if (!label) {
-      continue;
+  if (!shouldHideMainWingLabels()) {
+    for (let i = 0; i < wingCount; i += 1) {
+      const label = makeNoteLabel(midiToNoteNameWithOctave(getWingLabelMidiAt(i)));
+      if (!label) {
+        continue;
+      }
+      label.style.display = "block";
+      wingNoteLabelEls.push(label);
     }
-    label.style.display = "block";
-    wingNoteLabelEls.push(label);
   }
 
   bassRootNoteLabelEl = makeNoteLabel(midiToNoteNameWithOctave(bassRootMidi), true);
@@ -1859,10 +2403,11 @@ function updateNoteLabelPositions() {
     setLabelScreenPosition(rootNoteLabelEl, tmpWorld);
   }
 
-  const armRadius = getArmRadiusForSteps(wingCount, mainSpinnerScale);
+  const visualWingCount = getVisualWingCount();
+  const armRadius = getArmRadiusForSteps(visualWingCount, mainSpinnerScale);
   for (let i = 0; i < wingNoteLabelEls.length; i += 1) {
     const label = wingNoteLabelEls[i];
-    const angle = (i / wingCount) * Math.PI * 2;
+    const angle = (i / Math.max(1, visualWingCount)) * Math.PI * 2;
     tmpWorld.set(Math.cos(angle) * armRadius, Math.sin(angle) * armRadius, 0.08).applyMatrix4(spinner.matrixWorld);
     setLabelScreenPosition(label, tmpWorld);
   }
@@ -1885,6 +2430,7 @@ function updateNoteLabelPositions() {
 function refreshWingAssignments() {
   wingAssignedMidis = buildWingNotesFromScale();
   wingAssignedLabels = wingAssignedMidis.map((midi) => midiToNoteNameWithOctave(midi));
+  currentMainNoteMidi = wingAssignedMidis.length ? wingAssignedMidis[0] : getDisplayedRootMidi();
   bassAssignedMidis = buildBassNotesFromScale();
   bassStepIndex = 0;
   rebuildNoteSprites();
@@ -1898,7 +2444,7 @@ function rebuildSpinnerGeometry() {
   stabilizer.remove(spinner);
   stabilizer.remove(bassSpinner);
 
-  spinner = makeFidgetSpinner(wingCount, mainSpinnerScale);
+  spinner = makeFidgetSpinner(getVisualWingCount(), mainSpinnerScale);
   bassSpinner = makeFidgetSpinner(getBassStepCount(), bassScaleFactor);
   pulleyVisual = makePulleyVisual();
 
@@ -1995,12 +2541,26 @@ function setBeatRepeaterMode(mode) {
   beatRepeaterFeedbackGain.gain.setTargetAtTime(0, t, 0.005);
 }
 
+function scheduleBeatRepeaterQuantizedStart() {
+  beatRepeaterCycleElapsed = 0;
+  if (!audioCtx) {
+    beatRepeaterStartAtTime = null;
+    return;
+  }
+  const intervalSec = getIntervalSecondsFromRate(beatRepeaterIntervalDivision);
+  const now = audioCtx.currentTime;
+  const phase = ((now % intervalSec) + intervalSec) % intervalSec;
+  const timeToNextBoundary = phase < 0.002 ? 0 : intervalSec - phase;
+  beatRepeaterStartAtTime = now + timeToNextBoundary;
+}
+
 function updateBeatRepeater(dt) {
   if (!audioCtx || !beatRepeaterDelayNode) {
     return;
   }
 
-  if (!beatRepeaterEnabled || !transportPlaying) {
+  if ((!beatRepeaterEnabled && !beatRepeaterHoldActive) || !transportPlaying) {
+    beatRepeaterStartAtTime = null;
     beatRepeaterCycleElapsed = 0;
     setBeatRepeaterMode("bypass");
     return;
@@ -2011,12 +2571,41 @@ function updateBeatRepeater(dt) {
   const captureSec = Math.min(gridSec, intervalSec);
 
   beatRepeaterDelayNode.delayTime.setTargetAtTime(captureSec, audioCtx.currentTime, 0.01);
+
+  if (beatRepeaterStartAtTime !== null) {
+    if (audioCtx.currentTime < beatRepeaterStartAtTime) {
+      setBeatRepeaterMode("bypass");
+      return;
+    }
+    beatRepeaterCycleElapsed = audioCtx.currentTime - beatRepeaterStartAtTime;
+    beatRepeaterStartAtTime = null;
+  }
+
   beatRepeaterCycleElapsed += dt;
   while (beatRepeaterCycleElapsed >= intervalSec) {
     beatRepeaterCycleElapsed -= intervalSec;
   }
 
   setBeatRepeaterMode(beatRepeaterCycleElapsed < captureSec ? "capture" : "repeat");
+}
+
+function setBeatRepHoldState(active) {
+  beatRepeaterHoldActive = active;
+  if (beatRepHoldBtn) {
+    beatRepHoldBtn.classList.toggle("isHeld", active);
+  }
+
+  if (active) {
+    scheduleBeatRepeaterQuantizedStart();
+    setBeatRepeaterMode("bypass");
+    return;
+  }
+
+  if (!beatRepeaterEnabled) {
+    beatRepeaterStartAtTime = null;
+    beatRepeaterCycleElapsed = 0;
+    setBeatRepeaterMode("bypass");
+  }
 }
 
 function getCurrentArpIntervalSeconds(speedNorm, dt) {
@@ -2092,6 +2681,7 @@ function getSoftToneFreq(speed, invertOrder = false) {
 
   const finalIdx = invertOrder ? pool.length - 1 - idx : idx;
   const noteMidi = pool[finalIdx];
+  currentMainNoteMidi = noteMidi;
   return midiToFreq(noteMidi);
 }
 
@@ -2103,7 +2693,7 @@ function syncBassStepControls() {
 
   if (bassStepsSlider) {
     bassStepsSlider.min = "3";
-    bassStepsSlider.max = "9";
+    bassStepsSlider.max = "12";
     bassStepsSlider.value = String(getBassStepCount());
     bassStepsSlider.disabled = bassStepsLocked;
   }
@@ -2186,12 +2776,12 @@ if (bassLockStepsToggle) {
 }
 
 if (bassStepsSlider) {
-  bassManualStepCount = THREE.MathUtils.clamp(Number(bassStepsSlider.value || getDefaultBassStepCount()), 3, 9);
+  bassManualStepCount = THREE.MathUtils.clamp(Number(bassStepsSlider.value || getDefaultBassStepCount()), 3, 12);
   bassStepsSlider.addEventListener("input", () => {
     if (bassStepsLocked) {
       return;
     }
-    bassManualStepCount = THREE.MathUtils.clamp(Number(bassStepsSlider.value), 3, 9);
+    bassManualStepCount = THREE.MathUtils.clamp(Number(bassStepsSlider.value), 3, 12);
     syncBassStepControls();
     rebuildSpinnerGeometry();
     refreshWingAssignments();
@@ -2231,7 +2821,7 @@ if (soundSourceSelect) {
 
 if (wingCountSlider && wingCountValue) {
   const updateWingCountUi = () => {
-    wingCount = THREE.MathUtils.clamp(Number(wingCountSlider.value), 3, 9);
+    wingCount = THREE.MathUtils.clamp(Number(wingCountSlider.value), 3, 12);
     wingCountValue.textContent = String(wingCount);
     if (stepsSlider) {
       stepsSlider.value = String(wingCount);
@@ -2253,7 +2843,7 @@ if (wingCountSlider && wingCountValue) {
 
 if (stepsSlider && stepsValue) {
   const updateStepsUi = () => {
-    wingCount = THREE.MathUtils.clamp(Number(stepsSlider.value), 3, 9);
+    wingCount = THREE.MathUtils.clamp(Number(stepsSlider.value), 3, 12);
     stepsValue.textContent = String(wingCount);
     if (wingCountSlider) {
       wingCountSlider.value = String(wingCount);
@@ -2326,8 +2916,9 @@ if (octaveRangeSlider && octaveRangeValue) {
   const updateOctaveRangeUi = () => {
     octaveRange = THREE.MathUtils.clamp(Number(octaveRangeSlider.value), 0, 10);
     clampCurrentRootMidiToOctaveRange();
-    octaveRangeValue.textContent = `+/-${octaveRange}`;
+    octaveRangeValue.textContent = `+${octaveRange}`;
     resetArpSequence();
+    rebuildSpinnerGeometry();
     refreshWingAssignments();
   };
 
@@ -2371,6 +2962,28 @@ if (arpDirectionSelect) {
     const label = arpDirectionSelect.options[arpDirectionSelect.selectedIndex].text;
     showToast(`Arp direction: ${label}.`);
   });
+}
+
+if (arpDistanceSlider && arpDistanceValue) {
+  const updateArpDistanceUi = () => {
+    arpDistanceSemitones = THREE.MathUtils.clamp(Number(arpDistanceSlider.value), -24, 24);
+    arpDistanceValue.textContent = `${arpDistanceSemitones >= 0 ? "+" : ""}${arpDistanceSemitones} st`;
+    resetArpSequence();
+    refreshWingAssignments();
+  };
+
+  arpDistanceSlider.addEventListener("input", updateArpDistanceUi);
+  updateArpDistanceUi();
+}
+
+if (arpGateSlider && arpGateValue) {
+  const updateArpGateUi = () => {
+    arpGatePercent = THREE.MathUtils.clamp(Number(arpGateSlider.value), 5, 100);
+    arpGateValue.textContent = `${Math.round(arpGatePercent)}%`;
+  };
+
+  arpGateSlider.addEventListener("input", updateArpGateUi);
+  updateArpGateUi();
 }
 
 if (tempoInput) {
@@ -2785,7 +3398,7 @@ function playClassicTick(speed) {
   osc.type = "square";
   osc.frequency.setValueAtTime(660 + brightness * 420, t);
 
-  const release = getReleaseWithLfo(envelopeReleaseSeconds, t, 0.02, 1.2);
+  const release = getArpVoiceRelease(envelopeReleaseSeconds, t, 0.02, 1.2);
   gain.gain.setValueAtTime(0.0001, t);
   gain.gain.exponentialRampToValueAtTime(0.018 + brightness * 0.018, t + 0.002);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + release);
@@ -2809,7 +3422,7 @@ function playMonotoneTick(speed) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = midiToFreq(getDisplayedRootMidi() + 12);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds, t, 0.02, 1.2);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds, t, 0.02, 1.2);
     const lfoDuration = release + 0.02;
 
     osc.type = "sine";
@@ -2858,7 +3471,7 @@ function playOcarinaTick(speed) {
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const noteFreq = getSoftToneFreq(speed);
     const baseRelease = THREE.MathUtils.clamp(envelopeReleaseSeconds * 1.35, 0.05, 0.7);
-    const release = getReleaseWithLfo(baseRelease, t, 0.05, 0.7);
+    const release = getArpVoiceRelease(baseRelease, t, 0.05, 0.7);
     const lfoDuration = release + 0.02;
 
     pitchOsc.type = "sine";
@@ -2914,7 +3527,7 @@ function playArpTick(speed) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds, t, 0.02, 1.2);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds, t, 0.02, 1.2);
     const lfoDuration = release + 0.02;
 
     osc.type = "triangle";
@@ -2960,7 +3573,7 @@ function playWaveformTick(speed, oscType, sourceMode) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds, t, 0.02, 1.2);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds, t, 0.02, 1.2);
     const lfoDuration = release + 0.03;
 
     osc.type = oscType;
@@ -3009,7 +3622,7 @@ function playPulseTick(speed) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds * 0.9, t, 0.02, 1);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds * 0.9, t, 0.02, 1);
     const lfoDuration = release + 0.03;
 
     if (pulsePeriodicWave) {
@@ -3058,7 +3671,7 @@ function playSupersawTick(speed) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds * 1.1, t, 0.03, 1.4);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds * 1.1, t, 0.03, 1.4);
     const lfoDuration = release + 0.03;
     const detuneParams = [];
 
@@ -3108,7 +3721,7 @@ function playFmBellTick(speed) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds * 1.25, t, 0.04, 1.8);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds * 1.25, t, 0.04, 1.8);
     const lfoDuration = release + 0.04;
 
     carrier.type = "sine";
@@ -3156,7 +3769,7 @@ function playPluckTick(speed) {
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const baseFreq = getSoftToneFreq(speed, angularVelocity < 0);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds * 0.55, t, 0.02, 0.5);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds * 0.55, t, 0.02, 0.5);
     const lfoDuration = release + 0.02;
 
     osc.type = "triangle";
@@ -3199,7 +3812,7 @@ function playNoiseTick(speed) {
     const gain = audioCtx.createGain();
     const voiceFilter = createVoiceModFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
-    const release = getReleaseWithLfo(envelopeReleaseSeconds * 0.4, t, 0.02, 0.38);
+    const release = getArpVoiceRelease(envelopeReleaseSeconds * 0.4, t, 0.02, 0.38);
     const lfoDuration = release + 0.02;
 
     src.buffer = noiseBuffer;
@@ -3364,6 +3977,8 @@ function triggerSpinBeat(now, speed) {
 
   if (now - lastAudioTickTime >= minGap) {
     playTick(speed);
+    refreshMainWingLabelTexts();
+    updateCenterNoteLabelVisual();
     lastAudioTickTime = now;
   }
 
@@ -3445,6 +4060,7 @@ function animate() {
   const userSpinSpeed = Math.abs(gestureAngularVelocity);
   const speedNorm = THREE.MathUtils.clamp(userSpinSpeed / maxSpin, 0, 1);
   const arpInterval = getCurrentArpIntervalSeconds(speedNorm, dt);
+  currentArpIntervalSeconds = arpInterval;
   const transportAngularVelocity = transportPlaying
     ? ((Math.PI * 2) / Math.max(1, wingCount)) / Math.max(arpInterval, 1 / 512) * spinDirection
     : 0;
@@ -3641,8 +4257,12 @@ if (beatRepeaterToggle) {
   beatRepeaterEnabled = beatRepeaterToggle.checked;
   beatRepeaterToggle.addEventListener("change", () => {
     beatRepeaterEnabled = beatRepeaterToggle.checked;
-    beatRepeaterCycleElapsed = 0;
-    if (!beatRepeaterEnabled) {
+    if (beatRepeaterEnabled) {
+      scheduleBeatRepeaterQuantizedStart();
+      setBeatRepeaterMode("bypass");
+    } else {
+      beatRepeaterStartAtTime = null;
+      beatRepeaterCycleElapsed = 0;
       setBeatRepeaterMode("bypass");
     }
     showToast(beatRepeaterEnabled ? "Beat Repeater on (main spinner only)." : "Beat Repeater off.");
@@ -3650,10 +4270,15 @@ if (beatRepeaterToggle) {
 }
 
 if (beatRepeaterIntervalSelect) {
-  beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect.value), 2, 8);
+  beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect.value), 2, 16);
   beatRepeaterIntervalSelect.addEventListener("change", () => {
-    beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect.value), 2, 8);
-    beatRepeaterCycleElapsed = 0;
+    beatRepeaterIntervalDivision = THREE.MathUtils.clamp(Number(beatRepeaterIntervalSelect.value), 2, 16);
+    if (beatRepeaterEnabled || beatRepeaterHoldActive) {
+      scheduleBeatRepeaterQuantizedStart();
+      setBeatRepeaterMode("bypass");
+    } else {
+      beatRepeaterCycleElapsed = 0;
+    }
   });
 }
 
@@ -3661,8 +4286,44 @@ if (beatRepeaterGridSelect) {
   beatRepeaterGridDivision = THREE.MathUtils.clamp(Number(beatRepeaterGridSelect.value), 16, 64);
   beatRepeaterGridSelect.addEventListener("change", () => {
     beatRepeaterGridDivision = THREE.MathUtils.clamp(Number(beatRepeaterGridSelect.value), 16, 64);
-    beatRepeaterCycleElapsed = 0;
+    if (beatRepeaterEnabled || beatRepeaterHoldActive) {
+      scheduleBeatRepeaterQuantizedStart();
+      setBeatRepeaterMode("bypass");
+    } else {
+      beatRepeaterCycleElapsed = 0;
+    }
   });
+}
+
+if (beatRepHoldBtn) {
+  const holdStart = (event) => {
+    event.preventDefault();
+    if (!audioCtx) {
+      initAudio();
+    }
+    if (beatRepHoldBtn.setPointerCapture && event.pointerId != null) {
+      beatRepHoldBtn.setPointerCapture(event.pointerId);
+    }
+    setBeatRepHoldState(true);
+  };
+
+  const holdEnd = (event) => {
+    if (event && beatRepHoldBtn.releasePointerCapture && event.pointerId != null) {
+      try {
+        if (beatRepHoldBtn.hasPointerCapture && beatRepHoldBtn.hasPointerCapture(event.pointerId)) {
+          beatRepHoldBtn.releasePointerCapture(event.pointerId);
+        }
+      } catch (err) {
+        // Ignore stale capture release errors.
+      }
+    }
+    setBeatRepHoldState(false);
+  };
+
+  beatRepHoldBtn.addEventListener("pointerdown", holdStart);
+  beatRepHoldBtn.addEventListener("pointerup", holdEnd);
+  beatRepHoldBtn.addEventListener("pointercancel", holdEnd);
+  beatRepHoldBtn.addEventListener("lostpointercapture", holdEnd);
 }
 
 if (filter1TypeSelect) {
@@ -3723,3 +4384,6 @@ if (filter2ResSlider) {
 
 updateFxLabels();
 setupFxContainerSwipes();
+setupPresetSystem().catch(() => {
+  showToast("Preset bundle load failed.");
+});

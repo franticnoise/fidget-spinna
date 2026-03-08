@@ -13,11 +13,23 @@
     <div id="hud">
       <h1>Fidget Spinna</h1>
       <p>Spin with your thumb. Hold center and drag up/down to shift key.</p>
-      <p id="status">Tap and drag around center to spin.</p>
+      <p id="status"></p>
 
       <div id="settingsPanel" hidden>
         <div class="controlRow controlRowButtons">
           <button id="motionBtn" type="button">Enable Motion</button>
+        </div>
+
+        <div class="controlRow controlRowPreset">
+          <span>Presets</span>
+          <div class="presetControls">
+            <select id="presetSelect" size="5" aria-label="Saved presets"></select>
+            <div class="presetActionRow">
+              <button id="savePresetBtn" type="button" title="Save preset">Save</button>
+              <button id="renamePresetBtn" type="button" class="presetIconBtn" aria-label="Rename preset" title="Rename preset">&#9998;</button>
+              <button id="deletePresetBtn" type="button" class="presetIconBtn" aria-label="Delete preset" title="Delete preset">&#128465;</button>
+            </div>
+          </div>
         </div>
 
         <div class="controlRow">
@@ -98,17 +110,18 @@
             <option value="wholeTone">Whole Tone</option>
             <option value="diminished">Diminished (WH)</option>
             <option value="chromatic">Chromatic</option>
+            <option value="none">NONE</option>
           </select>
         </div>
 
         <div class="fxControl">
           <div class="fxHeader"><label for="wingCountSlider">Wing Count</label><span id="wingCountValue">6</span></div>
-          <input id="wingCountSlider" type="range" min="3" max="9" step="1" value="6" />
+          <input id="wingCountSlider" type="range" min="3" max="12" step="1" value="6" />
         </div>
 
         <div class="fxControl">
-          <div class="fxHeader"><label for="octaveRangeSlider">Octave Range</label><span id="octaveRangeValue">+/-2</span></div>
-          <input id="octaveRangeSlider" type="range" min="0" max="10" step="1" value="2" />
+          <div class="fxHeader"><label for="octaveRangeSlider">Octave Range</label><span id="octaveRangeValue">+0</span></div>
+          <input id="octaveRangeSlider" type="range" min="0" max="10" step="1" value="0" />
         </div>
 
         <div class="fxControl">
@@ -125,6 +138,16 @@
             <option value="downOnly">Only Down</option>
             <option value="random">Random</option>
           </select>
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="arpDistanceSlider">Distance</label><span id="arpDistanceValue">+3 st</span></div>
+          <input id="arpDistanceSlider" type="range" min="-24" max="24" step="1" value="3" />
+        </div>
+
+        <div class="fxControl">
+          <div class="fxHeader"><label for="arpGateSlider">Gate</label><span id="arpGateValue">100%</span></div>
+          <input id="arpGateSlider" type="range" min="5" max="100" step="1" value="100" />
         </div>
 
        
@@ -290,7 +313,7 @@
 
         <div class="fxControl" id="bassStepsControl">
           <div class="fxHeader"><label for="bassStepsSlider">Bass Steps</label><span id="bassStepsValue">3</span></div>
-          <input id="bassStepsSlider" type="range" min="3" max="9" step="1" value="3" />
+          <input id="bassStepsSlider" type="range" min="3" max="12" step="1" value="3" />
         </div>
       </div>
 
@@ -328,10 +351,6 @@
         <input id="delayAmountSlider" type="range" min="0" max="0.9" step="0.01" value="0.62" />
       </div>
       <div class="fxControl">
-        <div class="fxHeader"><label for="stepsSlider">Steps</label><span id="stepsValue">6</span></div>
-        <input id="stepsSlider" type="range" min="3" max="9" step="1" value="6" />
-      </div>
-      <div class="fxControl">
         <div class="fxHeader"><label for="pitchSemitoneSlider">Pitch</label><span id="pitchSemitoneValue">+0 st</span></div>
         <input id="pitchSemitoneSlider" type="range" min="-24" max="24" step="1" value="0" />
       </div>
@@ -345,6 +364,7 @@
       <div class="fxControl">
         <div class="fxHeader"><label for="beatRepeaterIntervalSelect">Repeat Interval</label><span>Window</span></div>
         <select id="beatRepeaterIntervalSelect">
+          <option value="16">1/16</option>
           <option value="8">1/8</option>
           <option value="4" selected>1/4</option>
           <option value="2">1/2</option>
@@ -468,6 +488,14 @@
 
     <canvas id="app"></canvas>
     <div id="spinnerNoteLayer" aria-hidden="true"></div>
+
+    <div id="beatRepHandle" aria-label="Beat repeater hold control">
+      <div id="beatRepCable" aria-hidden="true"></div>
+      <button id="beatRepHoldBtn" type="button" aria-label="Hold for beat repeater stutter">
+        <span>BEATREP</span>
+      </button>
+    </div>
+
     <script type="module" src="./main.js"></script>
   </body>
 </html>
