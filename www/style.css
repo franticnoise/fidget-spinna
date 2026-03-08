@@ -233,6 +233,39 @@ body {
   opacity: 0.9;
 }
 
+#status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 122px);
+  transform: translateX(-50%) translateY(10px);
+  z-index: 40;
+  margin: 0;
+  max-width: calc(100vw - 22px);
+  padding: 8px 12px;
+  border: 1px solid rgba(160, 240, 255, 0.95);
+  border-radius: 10px;
+  background: #19c5ff;
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+
+#status.toastVisible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#status.toastHiding {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px);
+}
+
 #motionBtn {
   pointer-events: auto;
   border: 1px solid var(--line);

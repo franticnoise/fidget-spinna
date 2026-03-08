@@ -101,6 +101,35 @@ const isMobile = window.matchMedia("(pointer: coarse)").matches;
 let settingsOpen = false;
 let arpOpen = false;
 let bassOpen = false;
+let toastHideTimer = null;
+let toastClearTimer = null;
+
+function showToast(message, visibleMs = 1800) {
+  if (!statusEl) {
+    return;
+  }
+
+  statusEl.innerText = String(message || "");
+  statusEl.classList.remove("toastVisible", "toastHiding");
+  void statusEl.offsetWidth;
+  statusEl.classList.add("toastVisible");
+
+  if (toastHideTimer) {
+    clearTimeout(toastHideTimer);
+  }
+  if (toastClearTimer) {
+    clearTimeout(toastClearTimer);
+  }
+
+  toastHideTimer = setTimeout(() => {
+    statusEl.classList.remove("toastVisible");
+    statusEl.classList.add("toastHiding");
+    toastClearTimer = setTimeout(() => {
+      statusEl.classList.remove("toastHiding");
+      statusEl.innerText = "";
+    }, 360);
+  }, Math.max(500, visibleMs));
+}
 
 function syncDockButtonStates() {
   if (settingsBtn) {
@@ -726,7 +755,7 @@ function beginCenterShift(event) {
   shiftDragOffsetY = 0;
   shiftScaleNotes = buildScaleMidiPool(Math.max(2, octaveRange));
   shiftScaleIndex = findNearestMidiIndex(shiftScaleNotes, currentRootMidi);
-  statusEl.textContent = "Center hold active: drag up/down to shift note and octave.";
+  showToast("Center hold active: drag up/down to shift note and octave.");
 }
 
 function findNearestMidiIndex(pool, midi) {
@@ -776,7 +805,7 @@ function resetShiftPointer() {
   lastShiftPointerActivity = 0;
   if (isCenterHoldShift) {
     isCenterHoldShift = false;
-    statusEl.textContent = `Shift set: ${rootNoteSelect.value} ${baseOctaveShift >= 0 ? `+${baseOctaveShift}` : baseOctaveShift}`;
+    showToast(`Shift set: ${rootNoteSelect.value} ${baseOctaveShift >= 0 ? `+${baseOctaveShift}` : baseOctaveShift}`);
   }
   shiftDragOffsetY = 0;
 }
@@ -805,19 +834,19 @@ function recoverStalePointers() {
 
   if (shiftPointerId !== null && now - lastShiftPointerActivity > stalePointerMs) {
     forceReleasePointers();
-    statusEl.textContent = "Recovered touch control. Continue dragging.";
+    showToast("Recovered touch control. Continue dragging.");
     return;
   }
 
   if (spinPointerId !== null && now - lastSpinPointerActivity > stalePointerMs) {
     forceReleasePointers();
-    statusEl.textContent = "Recovered touch control. Continue dragging.";
+    showToast("Recovered touch control. Continue dragging.");
     return;
   }
 
   if (bassDragPointerId !== null && now - lastBassDragPointerActivity > stalePointerMs) {
     forceReleasePointers();
-    statusEl.textContent = "Recovered touch control. Continue dragging.";
+    showToast("Recovered touch control. Continue dragging.");
   }
 }
 
@@ -858,7 +887,7 @@ window.addEventListener("pointerdown", (event) => {
     bassDragPointerId = event.pointerId;
     lastBassDragPointerActivity = performance.now();
     updateBassDragFromPointer(event.clientX, event.clientY);
-    statusEl.textContent = "Dragging bass engine.";
+    showToast("Dragging bass engine.");
     return;
   }
 
@@ -1066,12 +1095,12 @@ async function enableMotion() {
   }
 
   if (!window.isSecureContext) {
-    statusEl.textContent = "Motion needs HTTPS on iPhone. Use an HTTPS tunnel (ngrok/Cloudflare).";
+    showToast("Motion needs HTTPS on iPhone. Use an HTTPS tunnel (ngrok/Cloudflare).");
     return;
   }
 
   if (typeof DeviceOrientationEvent === "undefined") {
-    statusEl.textContent = "Device motion is not supported on this browser.";
+    showToast("Device motion is not supported on this browser.");
     return;
   }
 
@@ -1081,7 +1110,7 @@ async function enableMotion() {
     ) {
       const perm = await DeviceOrientationEvent.requestPermission();
       if (perm !== "granted") {
-        statusEl.textContent = "Motion denied. Check Safari Settings > Motion & Orientation Access.";
+        showToast("Motion denied. Check Safari Settings > Motion & Orientation Access.");
         return;
       }
     }
@@ -1090,9 +1119,9 @@ async function enableMotion() {
     motionEnabled = true;
     neutralQuat.copy(deviceQuat);
     updateMotionButtonUi();
-    statusEl.textContent = "Motion enabled: tilt controls delay time, delay amount, and release.";
+    showToast("Motion enabled: tilt controls delay time, delay amount, and release.");
   } catch (err) {
-    statusEl.textContent = "Motion unavailable on this device/browser.";
+    showToast("Motion unavailable on this device/browser.");
     console.error(err);
   }
 }
@@ -1109,7 +1138,7 @@ function disableMotion() {
   targetQuat.identity();
   correctedEuler.set(0, 0, 0);
   updateMotionButtonUi();
-  statusEl.textContent = "Motion disabled: manual spin control restored.";
+  showToast("Motion disabled: manual spin control restored.");
 }
 
 async function toggleMotion() {
@@ -2124,7 +2153,7 @@ if (bassEngineToggle) {
   bassEnabled = bassEngineToggle.checked;
   bassEngineToggle.addEventListener("change", () => {
     bassEnabled = bassEngineToggle.checked;
-    statusEl.textContent = bassEnabled ? "Bass engine on." : "Bass engine off.";
+    showToast(bassEnabled ? "Bass engine on." : "Bass engine off.");
   });
 }
 
@@ -2133,7 +2162,7 @@ if (bassInvertScaleToggle) {
   bassInvertScaleToggle.addEventListener("change", () => {
     bassInvertScale = bassInvertScaleToggle.checked;
     refreshWingAssignments();
-    statusEl.textContent = bassInvertScale ? "Bass scale inverted." : "Bass scale normal order.";
+    showToast(bassInvertScale ? "Bass scale inverted." : "Bass scale normal order.");
   });
 }
 
@@ -2196,7 +2225,7 @@ if (soundSourceSelect) {
   soundSourceSelect.addEventListener("change", () => {
     soundSourceMode = soundSourceSelect.value;
     const label = soundSourceSelect.options[soundSourceSelect.selectedIndex].text;
-    statusEl.textContent = `Sound source: ${label}.`;
+    showToast(`Sound source: ${label}.`);
   });
 }
 
@@ -2256,12 +2285,12 @@ if (pitchSemitoneSlider && pitchSemitoneValue) {
 
 muteToggle.addEventListener("change", () => {
   muted = muteToggle.checked;
-  statusEl.textContent = muted ? "Sound muted." : "Sound on.";
+  showToast(muted ? "Sound muted." : "Sound on.");
 });
 
 hapticsToggle.addEventListener("change", () => {
   noHaptics = hapticsToggle.checked;
-  statusEl.textContent = noHaptics ? "Haptics off." : "Haptics on.";
+  showToast(noHaptics ? "Haptics off." : "Haptics on.");
 });
 
 if (volumeSlider && volumeValue) {
@@ -2284,13 +2313,13 @@ rootNoteSelect.addEventListener("change", () => {
   syncRootControlsFromMidi();
   resetArpSequence();
   refreshWingAssignments();
-  statusEl.textContent = `Root note set to ${rootNoteSelect.value}.`;
+  showToast(`Root note set to ${rootNoteSelect.value}.`);
 });
 
 scaleSelect.addEventListener("change", () => {
   resetArpSequence();
   refreshWingAssignments();
-  statusEl.textContent = `Scale set to ${scaleSelect.options[scaleSelect.selectedIndex].text}.`;
+  showToast(`Scale set to ${scaleSelect.options[scaleSelect.selectedIndex].text}.`);
 });
 
 if (octaveRangeSlider && octaveRangeValue) {
@@ -2340,7 +2369,7 @@ if (arpDirectionSelect) {
     arpDirectionMode = arpDirectionSelect.value;
     resetArpSequence();
     const label = arpDirectionSelect.options[arpDirectionSelect.selectedIndex].text;
-    statusEl.textContent = `Arp direction: ${label}.`;
+    showToast(`Arp direction: ${label}.`);
   });
 }
 
@@ -2392,12 +2421,12 @@ if (transportToggleBtn) {
     if (!transportPlaying) {
       arpClockAccumulator = 0;
       bassTickCounter = 0;
-      statusEl.textContent = "Transport stopped.";
+      showToast("Transport stopped.");
     } else {
       if (audioCtx) {
         lfoSyncStartTime = audioCtx.currentTime;
       }
-      statusEl.textContent = `Transport playing at ${Math.round(tempoBpm)} BPM.`;
+      showToast(`Transport playing at ${Math.round(tempoBpm)} BPM.`);
     }
     updateTransportToggleUi();
   });
@@ -2807,7 +2836,7 @@ function playMonotoneTick(speed) {
     if (soundSourceSelect) {
       soundSourceSelect.value = "arp";
     }
-    statusEl.textContent = "Monotone fallback to arpeggiator.";
+    showToast("Monotone fallback to arpeggiator.");
     console.error(err);
   }
 }
@@ -3487,7 +3516,7 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("pointerdown", () => {
   unlockAudio().catch(() => {
-    statusEl.textContent = "Audio blocked by browser. Keep interacting to enable sound.";
+    showToast("Audio blocked by browser. Keep interacting to enable sound.");
   });
 
   if (isNativeCapacitor && nativeHaptics) {
@@ -3496,7 +3525,7 @@ window.addEventListener("pointerdown", () => {
   } else if (hapticsAvailable) {
     pulseHaptic(12);
   } else if (!canVibrate) {
-    statusEl.textContent = "Vibration not available in this browser/device.";
+    showToast("Vibration not available in this browser/device.");
   }
 });
 
@@ -3504,11 +3533,11 @@ if (motionBtn) {
   motionBtn.addEventListener("pointerdown", (event) => {
     event.stopPropagation();
     unlockAudio().catch(() => {
-      statusEl.textContent = "Audio blocked by browser. Keep interacting to enable sound.";
+      showToast("Audio blocked by browser. Keep interacting to enable sound.");
     });
 
     toggleMotion().catch(() => {
-      statusEl.textContent = "Motion unavailable on this device/browser.";
+      showToast("Motion unavailable on this device/browser.");
     });
   });
 }
@@ -3616,7 +3645,7 @@ if (beatRepeaterToggle) {
     if (!beatRepeaterEnabled) {
       setBeatRepeaterMode("bypass");
     }
-    statusEl.textContent = beatRepeaterEnabled ? "Beat Repeater on (main spinner only)." : "Beat Repeater off.";
+    showToast(beatRepeaterEnabled ? "Beat Repeater on (main spinner only)." : "Beat Repeater off.");
   });
 }
 
