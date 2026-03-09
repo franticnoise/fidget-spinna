@@ -23,6 +23,8 @@ const soundSourceSelect = document.getElementById("soundSourceSelect");
 const tempoInput = document.getElementById("tempoInput");
 const minArpRateSelect = document.getElementById("minArpRateSelect");
 const maxArpRateSelect = document.getElementById("maxArpRateSelect");
+const minArpRateValue = document.getElementById("minArpRateValue");
+const maxArpRateValue = document.getElementById("maxArpRateValue");
 const transportToggleBtn = document.getElementById("transportToggleBtn");
 const muteToggle = document.getElementById("muteToggle");
 const hapticsToggle = document.getElementById("hapticsToggle");
@@ -42,18 +44,31 @@ const baseOctaveSlider = document.getElementById("baseOctaveSlider");
 const baseOctaveValue = document.getElementById("baseOctaveValue");
 const bassEngineToggle = document.getElementById("bassEngineToggle");
 const bassInvertScaleToggle = document.getElementById("bassInvertScaleToggle");
+const bassRandomizeScaleToggle = document.getElementById("bassRandomizeScaleToggle");
 const bassLockToneToggle = document.getElementById("bassLockToneToggle");
 const bassLockStepsToggle = document.getElementById("bassLockStepsToggle");
 const bassLockReleaseToggle = document.getElementById("bassLockReleaseToggle");
+const bassLockRateToggle = document.getElementById("bassLockRateToggle");
 const bassStepsSlider = document.getElementById("bassStepsSlider");
 const bassStepsValue = document.getElementById("bassStepsValue");
 const bassPitchControl = document.getElementById("bassPitchControl");
 const bassStepsControl = document.getElementById("bassStepsControl");
 const bassReleaseControl = document.getElementById("bassReleaseControl");
+const bassRateControl = document.getElementById("bassRateControl");
 const bassPitchSlider = document.getElementById("bassPitchSlider");
 const bassPitchValue = document.getElementById("bassPitchValue");
+const bassRateSlider = document.getElementById("bassRateSlider");
+const bassRateValue = document.getElementById("bassRateValue");
 const bassEnvReleaseSlider = document.getElementById("bassEnvReleaseSlider");
 const bassEnvReleaseValue = document.getElementById("bassEnvReleaseValue");
+const bassWaveformSelect = document.getElementById("bassWaveformSelect");
+const bassWaveformValue = document.getElementById("bassWaveformValue");
+const bassFilterTypeSelect = document.getElementById("bassFilterTypeSelect");
+const bassFilterTypeValue = document.getElementById("bassFilterTypeValue");
+const bassFilterFreqSlider = document.getElementById("bassFilterFreqSlider");
+const bassFilterFreqValue = document.getElementById("bassFilterFreqValue");
+const bassFilterResSlider = document.getElementById("bassFilterResSlider");
+const bassFilterResValue = document.getElementById("bassFilterResValue");
 const arpDirectionSelect = document.getElementById("arpDirectionSelect");
 const arpDistanceSlider = document.getElementById("arpDistanceSlider");
 const arpDistanceValue = document.getElementById("arpDistanceValue");
@@ -78,6 +93,12 @@ const pitchSemitoneValue = document.getElementById("pitchSemitoneValue");
 const lfoShapeSelect = document.getElementById("lfoShapeSelect");
 const lfoRateSelect = document.getElementById("lfoRateSelect");
 const lfoRateValue = document.getElementById("lfoRateValue");
+const lfoTrace1 = document.getElementById("lfoTrace1");
+const lfoTrace2 = document.getElementById("lfoTrace2");
+const lfoTraceTitle1 = document.getElementById("lfoTraceTitle1");
+const lfoTraceTitle2 = document.getElementById("lfoTraceTitle2");
+const lfoTraceLine1 = document.getElementById("lfoTraceLine1");
+const lfoTraceLine2 = document.getElementById("lfoTraceLine2");
 const lfoAmountSlider = document.getElementById("lfoAmountSlider");
 const lfoAmountValue = document.getElementById("lfoAmountValue");
 const lfoTargetSelect = document.getElementById("lfoTargetSelect");
@@ -106,6 +127,68 @@ const filter2TypeValue = document.getElementById("filter2TypeValue");
 const filter2DepthSelect = document.getElementById("filter2DepthSelect");
 const filter2DepthValue = document.getElementById("filter2DepthValue");
 const isMobile = window.matchMedia("(pointer: coarse)").matches;
+const ARP_RATE_DIVISIONS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
+const ARP_RATE_MAX_INDEX = ARP_RATE_DIVISIONS.length - 1;
+const LFO_RATE_DIVISIONS = [0.5, 1, 2, 4, 8, 16, 32, 64, 128];
+const LFO_RATE_MAX_INDEX = LFO_RATE_DIVISIONS.length - 1;
+
+function snapArpRateDivision(value, fallback = 8) {
+  const raw = Number.isFinite(value) ? value : fallback;
+  let best = ARP_RATE_DIVISIONS[0];
+  let bestDistance = Infinity;
+
+  for (const division of ARP_RATE_DIVISIONS) {
+    const distance = Math.abs(Math.log2(Math.max(raw, 1) / division));
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = division;
+    }
+  }
+
+  return best;
+}
+
+function getArpRateIndexFromDivision(value, fallback = 8) {
+  const division = snapArpRateDivision(value, fallback);
+  const index = ARP_RATE_DIVISIONS.indexOf(division);
+  return index >= 0 ? index : ARP_RATE_DIVISIONS.indexOf(snapArpRateDivision(fallback, 8));
+}
+
+function getArpRateDivisionFromControl(controlEl, fallback = 8) {
+  if (!controlEl) {
+    return fallback;
+  }
+  const rawIndex = THREE.MathUtils.clamp(Math.round(Number(controlEl.value)), 0, ARP_RATE_MAX_INDEX);
+  return ARP_RATE_DIVISIONS[rawIndex];
+}
+
+function getLfoRateIndexFromDivision(value, fallback = 16) {
+  const raw = Number.isFinite(value) ? value : fallback;
+  let bestIndex = 0;
+  let bestDistance = Infinity;
+
+  for (let i = 0; i < LFO_RATE_DIVISIONS.length; i += 1) {
+    const distance = Math.abs(Math.log2(Math.max(raw, 0.25) / LFO_RATE_DIVISIONS[i]));
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = i;
+    }
+  }
+
+  return bestIndex;
+}
+
+function getLfoRateDivisionFromControl(controlEl, fallback = 16) {
+  if (!controlEl) {
+    return fallback;
+  }
+  const rawIndex = THREE.MathUtils.clamp(Math.round(Number(controlEl.value)), 0, LFO_RATE_MAX_INDEX);
+  return LFO_RATE_DIVISIONS[rawIndex];
+}
+
+function readArpRateControlValue(controlEl, fallback = 8) {
+  return getArpRateDivisionFromControl(controlEl, fallback);
+}
 
 let settingsOpen = false;
 let arpOpen = false;
@@ -122,8 +205,8 @@ const PRESET_CONTROL_DEFS = [
   { key: "noHaptics", element: hapticsToggle, eventName: "change", kind: "checked" },
   { key: "masterVolume", element: volumeSlider, eventName: "input", kind: "value" },
   { key: "tempoBpm", element: tempoInput, eventName: "input", kind: "value" },
-  { key: "minArpRate", element: minArpRateSelect, eventName: "change", kind: "value" },
-  { key: "maxArpRate", element: maxArpRateSelect, eventName: "change", kind: "value" },
+  { key: "minArpRate", element: minArpRateSelect, eventName: "input", kind: "value" },
+  { key: "maxArpRate", element: maxArpRateSelect, eventName: "input", kind: "value" },
   { key: "rootNote", element: rootNoteSelect, eventName: "change", kind: "value" },
   { key: "scale", element: scaleSelect, eventName: "change", kind: "value" },
   { key: "wingCount", element: wingCountSlider, eventName: "input", kind: "value" },
@@ -134,12 +217,19 @@ const PRESET_CONTROL_DEFS = [
   { key: "arpGate", element: arpGateSlider, eventName: "input", kind: "value" },
   { key: "bassEnabled", element: bassEngineToggle, eventName: "change", kind: "checked" },
   { key: "bassInvertScale", element: bassInvertScaleToggle, eventName: "change", kind: "checked" },
+  { key: "bassRandomizeScale", element: bassRandomizeScaleToggle, eventName: "change", kind: "checked" },
   { key: "bassToneLocked", element: bassLockToneToggle, eventName: "change", kind: "checked" },
   { key: "bassStepsLocked", element: bassLockStepsToggle, eventName: "change", kind: "checked" },
   { key: "bassReleaseLocked", element: bassLockReleaseToggle, eventName: "change", kind: "checked" },
+  { key: "bassRateLocked", element: bassLockRateToggle, eventName: "change", kind: "checked" },
   { key: "bassSteps", element: bassStepsSlider, eventName: "input", kind: "value" },
   { key: "bassPitch", element: bassPitchSlider, eventName: "input", kind: "value" },
+  { key: "bassRate", element: bassRateSlider, eventName: "input", kind: "value" },
   { key: "bassRelease", element: bassEnvReleaseSlider, eventName: "input", kind: "value" },
+  { key: "bassWaveform", element: bassWaveformSelect, eventName: "change", kind: "value" },
+  { key: "bassFilterType", element: bassFilterTypeSelect, eventName: "change", kind: "value" },
+  { key: "bassFilterFreq", element: bassFilterFreqSlider, eventName: "input", kind: "value" },
+  { key: "bassFilterRes", element: bassFilterResSlider, eventName: "input", kind: "value" },
   { key: "reverbDecay", element: reverbDecaySlider, eventName: "input", kind: "value" },
   { key: "envRelease", element: envReleaseSlider, eventName: "input", kind: "value" },
   { key: "delayTime", element: delayTimeSlider, eventName: "input", kind: "value" },
@@ -149,11 +239,11 @@ const PRESET_CONTROL_DEFS = [
   { key: "beatRepeaterInterval", element: beatRepeaterIntervalSelect, eventName: "change", kind: "value" },
   { key: "beatRepeaterGrid", element: beatRepeaterGridSelect, eventName: "change", kind: "value" },
   { key: "lfoShape1", element: lfoShapeSelect, eventName: "change", kind: "value" },
-  { key: "lfoRate1", element: lfoRateSelect, eventName: "change", kind: "value" },
+  { key: "lfoRate1", element: lfoRateSelect, eventName: "input", kind: "value" },
   { key: "lfoAmount1", element: lfoAmountSlider, eventName: "input", kind: "value" },
   { key: "lfoTarget1", element: lfoTargetSelect, eventName: "change", kind: "value" },
   { key: "lfoShape2", element: lfoShapeSelect2, eventName: "change", kind: "value" },
-  { key: "lfoRate2", element: lfoRateSelect2, eventName: "change", kind: "value" },
+  { key: "lfoRate2", element: lfoRateSelect2, eventName: "input", kind: "value" },
   { key: "lfoAmount2", element: lfoAmountSlider2, eventName: "input", kind: "value" },
   { key: "lfoTarget2", element: lfoTargetSelect2, eventName: "change", kind: "value" },
   { key: "filter1Type", element: filter1TypeSelect, eventName: "change", kind: "value" },
@@ -171,6 +261,22 @@ function capturePresetValues() {
 
   for (const def of PRESET_CONTROL_DEFS) {
     if (!def.element) {
+      continue;
+    }
+    if (def.key === "minArpRate") {
+      values[def.key] = String(minArpRate);
+      continue;
+    }
+    if (def.key === "maxArpRate") {
+      values[def.key] = String(maxArpRate);
+      continue;
+    }
+    if (def.key === "lfoRate1") {
+      values[def.key] = String(lfoRateDivision);
+      continue;
+    }
+    if (def.key === "lfoRate2") {
+      values[def.key] = String(lfoRateDivision2);
       continue;
     }
     values[def.key] = def.kind === "checked" ? !!def.element.checked : String(def.element.value);
@@ -197,7 +303,16 @@ function applyPresetValues(values) {
       }
       def.element.checked = checked;
     } else {
-      const stringValue = String(nextValue);
+      let stringValue = String(nextValue);
+      if (def.key === "minArpRate" || def.key === "maxArpRate") {
+        stringValue = String(getArpRateIndexFromDivision(Number(nextValue), def.key === "minArpRate" ? 8 : 128));
+      }
+      if (def.key === "lfoRate1" || def.key === "lfoRate2") {
+        stringValue = String(getLfoRateIndexFromDivision(Number(nextValue), def.key === "lfoRate1" ? 16 : 16));
+      }
+      if (def.key === "bassFilterType") {
+        stringValue = normalizeBassFilterMode(nextValue);
+      }
       if (def.element.value === stringValue) {
         continue;
       }
@@ -505,22 +620,22 @@ function syncDockButtonStates() {
     bassBtn.setAttribute("aria-pressed", bassOpen ? "true" : "false");
   }
   if (fxModBtn) {
-    const open = !!(fxModal && !fxModal.hidden);
+    const open = !!(fxModal && fxModal.classList.contains("isPanelOpen"));
     fxModBtn.classList.toggle("isOpen", open);
     fxModBtn.setAttribute("aria-pressed", open ? "true" : "false");
   }
   if (filterBtn) {
-    const open = !!(filterModal && !filterModal.hidden);
+    const open = !!(filterModal && filterModal.classList.contains("isPanelOpen"));
     filterBtn.classList.toggle("isOpen", open);
     filterBtn.setAttribute("aria-pressed", open ? "true" : "false");
   }
   if (mod1Btn) {
-    const open = !!(mod1Modal && !mod1Modal.hidden);
+    const open = !!(mod1Modal && mod1Modal.classList.contains("isPanelOpen"));
     mod1Btn.classList.toggle("isOpen", open);
     mod1Btn.setAttribute("aria-pressed", open ? "true" : "false");
   }
   if (mod2Btn) {
-    const open = !!(mod2Modal && !mod2Modal.hidden);
+    const open = !!(mod2Modal && mod2Modal.classList.contains("isPanelOpen"));
     mod2Btn.classList.toggle("isOpen", open);
     mod2Btn.setAttribute("aria-pressed", open ? "true" : "false");
   }
@@ -981,6 +1096,17 @@ function updateCenterNoteLabelVisual() {
   }, 70);
 }
 
+function updateBassCenterNoteLabelVisual() {
+  if (!bassRootNoteLabelEl) {
+    return;
+  }
+
+  bassRootNoteLabelEl.textContent = midiToNoteNameWithOctave(currentBassNoteMidi ?? bassRootMidi);
+  bassRootNoteLabelEl.classList.remove("noteLabelPulse");
+  void bassRootNoteLabelEl.offsetWidth;
+  bassRootNoteLabelEl.classList.add("noteLabelPulse");
+}
+
 function getArmRadiusForSteps(stepCount, scaleFactor = 1) {
   const base = stepCount >= 24
     ? 1.24
@@ -1054,17 +1180,21 @@ function makeFidgetSpinner(stepCount = getVisualWingCount(), scaleFactor = 1) {
 
 const stabilizer = new THREE.Group();
 const mainSpinnerScale = 0.6;
-const bassScaleBase = 0.6;
+const bassScaleBase = 0.52;
 const mainSpinnerX = 0;
-const bassSpinnerBaseX = 1.86;
+const bassSpinnerBaseX = 1.66;
 const bassScaleFactor = bassScaleBase * mainSpinnerScale;
 let bassEnabled = false;
 let bassInvertScale = false;
+let bassRandomizeScale = false;
 let bassToneLocked = false;
 let bassStepsLocked = true;
 let bassReleaseLocked = true;
-let bassEnvelopeReleaseSeconds = THREE.MathUtils.clamp(Number(bassEnvReleaseSlider ? bassEnvReleaseSlider.value : 0.31), 0.03, 1.2);
+let bassRateLocked = true;
+let bassEnvelopeReleaseSeconds = THREE.MathUtils.clamp(Number(bassEnvReleaseSlider ? bassEnvReleaseSlider.value : 0.31), 0.03, 3);
 let bassManualStepCount = 3;
+const BASS_RATE_DIVISIONS = [1, 2, 4, 8];
+let bassRateDivision = BASS_RATE_DIVISIONS[1];
 let bassDragOffsetX = 0;
 let bassDragOffsetY = 0;
 let bassDragPointerId = null;
@@ -1075,6 +1205,20 @@ let pulleyTopBelt = null;
 let pulleyBottomBelt = null;
 let pulleyMainRadius = 0;
 let pulleyBassRadius = 0;
+let lfoTurboVisual = null;
+let lfoTurboLeftFan = null;
+let lfoTurboRightFan = null;
+let lfoTurboLeftTopBelt = null;
+let lfoTurboLeftBottomBelt = null;
+let lfoTurboRightTopBelt = null;
+let lfoTurboRightBottomBelt = null;
+const lfoTurboRadius = 0.27;
+const lfoTurboOffsetX = 1.4;
+const lfoTurboOffsetY = 1.28;
+const bassVisualBaseYOffset = -0.14;
+const lfoTurboLeftCenter = new THREE.Vector3();
+const lfoTurboRightCenter = new THREE.Vector3();
+const lfoTurboOverlayScreen = new THREE.Vector3();
 
 function getDefaultBassStepCount() {
   return THREE.MathUtils.clamp(Math.floor(wingCount / 2), 3, 12);
@@ -1148,14 +1292,177 @@ function updatePulleyVisual(mainY, bassY) {
   setPulleyLinePoints(pulleyBottomBelt, mainSpinnerX, mainY - pulleyMainRadius, bassX, bassY - pulleyBassRadius);
 }
 
+function makeTurboHousing(side = 1) {
+  const group = new THREE.Group();
+  const fan = new THREE.Group();
+
+  group.add(ring(lfoTurboRadius, 48, -0.01, lineMaterial));
+  group.add(ring(lfoTurboRadius * 0.77, 48, -0.012, softLineMaterial));
+  group.add(polygon(8, lfoTurboRadius * 1.16, -0.015, Math.PI / 8, softLineMaterial));
+
+  const intakePoints = [
+    new THREE.Vector3(side * (lfoTurboRadius * 0.35), lfoTurboRadius * 0.9, -0.012),
+    new THREE.Vector3(side * (lfoTurboRadius * 1.1), lfoTurboRadius * 1.55, -0.012),
+  ];
+  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(intakePoints), softLineMaterial));
+
+  const bladeLength = lfoTurboRadius * 0.62;
+  for (let i = 0; i < 3; i += 1) {
+    const a = (i / 3) * Math.PI * 2;
+    const bladePoints = [
+      new THREE.Vector3(0, 0, 0.01),
+      new THREE.Vector3(Math.cos(a) * bladeLength, Math.sin(a) * bladeLength, 0.01),
+    ];
+    fan.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bladePoints), lineMaterial));
+  }
+  fan.add(ring(lfoTurboRadius * 0.16, 24, 0.012, lineMaterial));
+  group.add(fan);
+
+  return { group, fan };
+}
+
+function makeLfoTurboVisual() {
+  const group = new THREE.Group();
+  const leftTurbo = makeTurboHousing(-1);
+  const rightTurbo = makeTurboHousing(1);
+  lfoTurboLeftFan = leftTurbo.fan;
+  lfoTurboRightFan = rightTurbo.fan;
+  group.add(leftTurbo.group);
+  group.add(rightTurbo.group);
+
+  const leftTop = [new THREE.Vector3(), new THREE.Vector3()];
+  const leftBottom = [new THREE.Vector3(), new THREE.Vector3()];
+  const rightTop = [new THREE.Vector3(), new THREE.Vector3()];
+  const rightBottom = [new THREE.Vector3(), new THREE.Vector3()];
+
+  lfoTurboLeftTopBelt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(leftTop), softLineMaterial);
+  lfoTurboLeftBottomBelt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(leftBottom), softLineMaterial);
+  lfoTurboRightTopBelt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(rightTop), softLineMaterial);
+  lfoTurboRightBottomBelt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(rightBottom), softLineMaterial);
+
+  group.add(lfoTurboLeftTopBelt);
+  group.add(lfoTurboLeftBottomBelt);
+  group.add(lfoTurboRightTopBelt);
+  group.add(lfoTurboRightBottomBelt);
+  return group;
+}
+
+function updateLfoTurboVisual(mainY) {
+  if (!lfoTurboVisual || !lfoTurboLeftTopBelt || !lfoTurboRightTopBelt) {
+    return;
+  }
+
+  const turboY = lfoTurboOffsetY;
+  const leftX = mainSpinnerX - lfoTurboOffsetX;
+  const rightX = mainSpinnerX + lfoTurboOffsetX;
+
+  lfoTurboLeftCenter.set(leftX, turboY, 0.02);
+  lfoTurboRightCenter.set(rightX, turboY, 0.02);
+
+  if (lfoTurboVisual.children[0]) {
+    lfoTurboVisual.children[0].position.set(leftX, turboY, 0);
+  }
+  if (lfoTurboVisual.children[1]) {
+    lfoTurboVisual.children[1].position.set(rightX, turboY, 0);
+  }
+
+  const mainRadius = getArmRadiusForSteps(getVisualWingCount(), mainSpinnerScale);
+  const leftMainAx = mainSpinnerX - mainRadius * 0.84;
+  const rightMainAx = mainSpinnerX + mainRadius * 0.84;
+  const topMainY = mainY + mainRadius * 0.72;
+  const lowMainY = mainY + mainRadius * 0.2;
+
+  setPulleyLinePoints(
+    lfoTurboLeftTopBelt,
+    leftMainAx,
+    topMainY,
+    leftX + lfoTurboRadius * 0.45,
+    turboY - lfoTurboRadius * 0.7,
+  );
+  setPulleyLinePoints(
+    lfoTurboLeftBottomBelt,
+    leftMainAx * 0.95,
+    lowMainY,
+    leftX + lfoTurboRadius * 0.62,
+    turboY - lfoTurboRadius * 0.92,
+  );
+  setPulleyLinePoints(
+    lfoTurboRightTopBelt,
+    rightMainAx,
+    topMainY,
+    rightX - lfoTurboRadius * 0.45,
+    turboY - lfoTurboRadius * 0.7,
+  );
+  setPulleyLinePoints(
+    lfoTurboRightBottomBelt,
+    rightMainAx * 0.95,
+    lowMainY,
+    rightX - lfoTurboRadius * 0.62,
+    turboY - lfoTurboRadius * 0.92,
+  );
+}
+
+function ensureGroupOwnLineMaterials(group) {
+  if (!group) {
+    return;
+  }
+
+  group.traverse((node) => {
+    if (!node || !node.isLine || !node.material || !node.material.isLineBasicMaterial) {
+      return;
+    }
+
+    if (!node.userData.__bassVisualMaterialOwned) {
+      node.material = node.material.clone();
+      node.userData.__bassVisualMaterialOwned = true;
+      node.userData.__bassBaseColor = node.material.color.getHex();
+      node.userData.__bassBaseOpacity = node.material.opacity;
+    }
+  });
+}
+
+function setGroupGreyState(group, greyed) {
+  if (!group) {
+    return;
+  }
+
+  group.traverse((node) => {
+    if (!node || !node.isLine || !node.material || !node.material.isLineBasicMaterial) {
+      return;
+    }
+
+    const baseColor = Number.isFinite(node.userData.__bassBaseColor) ? node.userData.__bassBaseColor : 0x76ddff;
+    const baseOpacity = Number.isFinite(node.userData.__bassBaseOpacity) ? node.userData.__bassBaseOpacity : node.material.opacity;
+
+    if (greyed) {
+      node.material.color.setHex(0x9fa6ad);
+      node.material.opacity = Math.max(0.16, baseOpacity * 0.65);
+    } else {
+      node.material.color.setHex(baseColor);
+      node.material.opacity = baseOpacity;
+    }
+  });
+}
+
+function syncBassEngineVisualState() {
+  ensureGroupOwnLineMaterials(bassSpinner);
+  ensureGroupOwnLineMaterials(pulleyVisual);
+  setGroupGreyState(bassSpinner, !bassEnabled);
+  setGroupGreyState(pulleyVisual, !bassEnabled);
+}
+
 let spinner = makeFidgetSpinner(getVisualWingCount(), mainSpinnerScale);
 let bassSpinner = makeFidgetSpinner(getBassStepCount(), bassScaleFactor);
 let pulleyVisual = makePulleyVisual();
+lfoTurboVisual = makeLfoTurboVisual();
 spinner.position.x = mainSpinnerX;
 bassSpinner.position.x = getBassSpinnerX();
 stabilizer.add(pulleyVisual);
 stabilizer.add(spinner);
 stabilizer.add(bassSpinner);
+stabilizer.add(lfoTurboVisual);
+updateLfoTurboVisual(spinner.position.y);
+syncBassEngineVisualState();
 scene.add(stabilizer);
 
 let spinAngle = 0;
@@ -1168,6 +1475,7 @@ const spinInputGain = 0.34;
 
 let spinPointerId = null;
 let shiftPointerId = null;
+let bladeBrakePointerId = null;
 let lastSpinPointerAngle = null;
 let lastSpinPointerTime = 0;
 let isCenterHoldShift = false;
@@ -1179,13 +1487,19 @@ let shiftDragOffsetY = 0;
 let rootOctaveOffset = 0;
 let lastShiftPointerActivity = 0;
 let lastSpinPointerActivity = 0;
+let bladeBrakeStartX = 0;
+let bladeBrakeStartY = 0;
+let bladeBrakeActive = false;
 
 const centerGrabRadiusPx = 72;
 const bassGrabRadiusPx = 76;
 const shiftStepPx = 20;
 const stalePointerMs = 900;
+const bladeBrakeCancelMovePx = 16;
 const spinnerScreenCenter = new THREE.Vector3();
 const bassScreenCenter = new THREE.Vector3();
+const spinnerBladeWorldPoint = new THREE.Vector3();
+const spinnerBladeScreenPoint = new THREE.Vector3();
 
 function getSpinnerScreenCenter() {
   spinnerScreenCenter.set(0, spinner.position.y, 0);
@@ -1205,6 +1519,38 @@ function getBassScreenCenter() {
     x: (bassScreenCenter.x * 0.5 + 0.5) * window.innerWidth,
     y: (-bassScreenCenter.y * 0.5 + 0.5) * window.innerHeight,
   };
+}
+
+function getSpinnerBladeTouchBandPx() {
+  const center = getSpinnerScreenCenter();
+  stabilizer.updateMatrixWorld(true);
+
+  const armRadius = getArmRadiusForSteps(getVisualWingCount(), mainSpinnerScale);
+  spinnerBladeWorldPoint.set(armRadius, 0, 0).applyMatrix4(spinner.matrixWorld);
+  spinnerBladeScreenPoint.copy(spinnerBladeWorldPoint).project(camera);
+
+  const bladeX = (spinnerBladeScreenPoint.x * 0.5 + 0.5) * window.innerWidth;
+  const bladeY = (-spinnerBladeScreenPoint.y * 0.5 + 0.5) * window.innerHeight;
+  const bladeRadiusPx = Math.hypot(bladeX - center.x, bladeY - center.y);
+
+  return {
+    inner: Math.max(centerGrabRadiusPx + 8, bladeRadiusPx - 64),
+    outer: bladeRadiusPx + 64,
+  };
+}
+
+function engageBladeBrake(pointerId, clientX, clientY) {
+  bladeBrakePointerId = pointerId;
+  bladeBrakeStartX = clientX;
+  bladeBrakeStartY = clientY;
+  bladeBrakeActive = true;
+  gestureAngularVelocity = 0;
+  lastSpinPointerActivity = performance.now();
+}
+
+function releaseBladeBrake() {
+  bladeBrakePointerId = null;
+  bladeBrakeActive = false;
 }
 
 function updateBassDragFromPointer(clientX, clientY) {
@@ -1306,6 +1652,7 @@ function resetSpinPointer() {
 function forceReleasePointers() {
   shiftPointerId = null;
   spinPointerId = null;
+  releaseBladeBrake();
   bassDragPointerId = null;
   isCenterHoldShift = false;
   shiftCarryY = 0;
@@ -1326,6 +1673,12 @@ function recoverStalePointers() {
   }
 
   if (spinPointerId !== null && now - lastSpinPointerActivity > stalePointerMs) {
+    forceReleasePointers();
+    showToast("Recovered touch control. Continue dragging.");
+    return;
+  }
+
+  if (bladeBrakePointerId !== null && now - lastSpinPointerActivity > stalePointerMs) {
     forceReleasePointers();
     showToast("Recovered touch control. Continue dragging.");
     return;
@@ -1389,6 +1742,14 @@ window.addEventListener("pointerdown", (event) => {
     return;
   }
 
+  const bladeBand = getSpinnerBladeTouchBandPx();
+  const isBladeTouch = dist >= bladeBand.inner && dist <= bladeBand.outer;
+
+  if (isBladeTouch && bladeBrakePointerId === null && spinPointerId === null) {
+    engageBladeBrake(event.pointerId, event.clientX, event.clientY);
+    return;
+  }
+
   if (dist > centerGrabRadiusPx && spinPointerId === null) {
     spinPointerId = event.pointerId;
     lastSpinPointerAngle = pointerAngle(event.clientX, event.clientY);
@@ -1420,6 +1781,19 @@ window.addEventListener("pointermove", (event) => {
       applyCenterShiftSteps(-1);
       shiftCarryY -= shiftStepPx;
     }
+  }
+
+  if (event.pointerId === bladeBrakePointerId) {
+    lastSpinPointerActivity = performance.now();
+    const moved = Math.hypot(event.clientX - bladeBrakeStartX, event.clientY - bladeBrakeStartY);
+    if (moved > bladeBrakeCancelMovePx && spinPointerId === null) {
+      releaseBladeBrake();
+      spinPointerId = event.pointerId;
+      lastSpinPointerAngle = pointerAngle(event.clientX, event.clientY);
+      lastSpinPointerTime = performance.now();
+      lastSpinPointerActivity = lastSpinPointerTime;
+    }
+    return;
   }
 
   if (event.pointerId !== spinPointerId || lastSpinPointerAngle === null) {
@@ -1458,6 +1832,10 @@ window.addEventListener("pointerup", (event) => {
   if (event.pointerId === spinPointerId) {
     resetSpinPointer();
   }
+
+  if (event.pointerId === bladeBrakePointerId) {
+    releaseBladeBrake();
+  }
 });
 
 window.addEventListener("pointercancel", (event) => {
@@ -1472,6 +1850,10 @@ window.addEventListener("pointercancel", (event) => {
 
   if (event.pointerId === spinPointerId) {
     resetSpinPointer();
+  }
+
+  if (event.pointerId === bladeBrakePointerId) {
+    releaseBladeBrake();
   }
 });
 
@@ -1647,13 +2029,13 @@ let masterVolume = THREE.MathUtils.clamp(Number(volumeSlider ? volumeSlider.valu
 let reverbDecaySeconds = THREE.MathUtils.clamp(Number(reverbDecaySlider ? reverbDecaySlider.value : 3.1), 0.2, 10);
 let envelopeReleaseSeconds = THREE.MathUtils.clamp(Number(envReleaseSlider ? envReleaseSlider.value : 0.31), 0.03, 1.2);
 const delayTimeMinSeconds = 0;
-const delayTimeMaxSeconds = 0.2;
+const delayTimeMaxSeconds = 0.333;
 let delayTimeSeconds = THREE.MathUtils.clamp(Number(delayTimeSlider ? delayTimeSlider.value : 0.06), delayTimeMinSeconds, delayTimeMaxSeconds);
 let delayAmount = THREE.MathUtils.clamp(Number(delayAmountSlider ? delayAmountSlider.value : 0.62), 0, 0.9);
 let arpStep = 0;
 let arpDirectionSign = 1;
 let arpDirectionMode = arpDirectionSelect ? arpDirectionSelect.value : "upOnly";
-let arpDistanceSemitones = THREE.MathUtils.clamp(Number(arpDistanceSlider ? arpDistanceSlider.value : 3), -24, 24);
+let arpDistanceSemitones = THREE.MathUtils.clamp(Number(arpDistanceSlider ? arpDistanceSlider.value : 6), 0, 24);
 let arpGatePercent = THREE.MathUtils.clamp(Number(arpGateSlider ? arpGateSlider.value : 100), 5, 100);
 let currentArpIntervalSeconds = 0.25;
 let masterDryGain = null;
@@ -1673,12 +2055,12 @@ let beatRepeaterLoopInputGain = null;
 let beatRepeaterDelayNode = null;
 let beatRepeaterFeedbackGain = null;
 let beatRepeaterOutputGain = null;
-let lfoShape = lfoShapeSelect ? lfoShapeSelect.value : "square";
-let lfoRateDivision = THREE.MathUtils.clamp(Number(lfoRateSelect ? lfoRateSelect.value : 16), 0.5, 128);
+let lfoShape = lfoShapeSelect ? lfoShapeSelect.value : "sine";
+let lfoRateDivision = getLfoRateDivisionFromControl(lfoRateSelect, 16);
 let lfoAmount = THREE.MathUtils.clamp(Number(lfoAmountSlider ? lfoAmountSlider.value : 0) / 100, 0, 1);
 let lfoTarget = lfoTargetSelect ? lfoTargetSelect.value : "amplitude";
-let lfoShape2 = lfoShapeSelect2 ? lfoShapeSelect2.value : "square";
-let lfoRateDivision2 = THREE.MathUtils.clamp(Number(lfoRateSelect2 ? lfoRateSelect2.value : 16), 0.5, 128);
+let lfoShape2 = lfoShapeSelect2 ? lfoShapeSelect2.value : "sine";
+let lfoRateDivision2 = getLfoRateDivisionFromControl(lfoRateSelect2, 16);
 let lfoAmount2 = THREE.MathUtils.clamp(Number(lfoAmountSlider2 ? lfoAmountSlider2.value : 0) / 100, 0, 1);
 let lfoTarget2 = lfoTargetSelect2 ? lfoTargetSelect2.value : "amplitude";
 if (lfoTarget === "filterCutoff") {
@@ -1701,11 +2083,19 @@ let filter2Type = filter2TypeSelect ? filter2TypeSelect.value : "lowpass";
 let filter2CutoffHz = THREE.MathUtils.clamp(Number(filter2FreqSlider ? filter2FreqSlider.value : 12000), filterFreqMinHz, filterFreqMaxHz);
 let filter2Resonance = THREE.MathUtils.clamp(Number(filter2ResSlider ? filter2ResSlider.value : 0.8), filterResMin, filterResMax);
 let filter2DepthDb = filter2DepthSelect ? THREE.MathUtils.clamp(Number(filter2DepthSelect.value), 16, 48) : 16;
+let bassWaveform = bassWaveformSelect ? bassWaveformSelect.value : "triangle";
+let bassFilterType = bassFilterTypeSelect ? bassFilterTypeSelect.value : "lp24";
+let bassFilterCutoffHz = THREE.MathUtils.clamp(Number(bassFilterFreqSlider ? bassFilterFreqSlider.value : 220), filterFreqMinHz, filterFreqMaxHz);
+let bassFilterResonance = THREE.MathUtils.clamp(Number(bassFilterResSlider ? bassFilterResSlider.value : 0.9), filterResMin, filterResMax);
 let lfoSyncStartTime = 0;
 let tempoBpm = THREE.MathUtils.clamp(Number(tempoInput ? tempoInput.value : 120), 30, 280);
-let minArpRate = THREE.MathUtils.clamp(Number(minArpRateSelect ? minArpRateSelect.value : 8), 1, 256);
-let maxArpRate = THREE.MathUtils.clamp(Number(maxArpRateSelect ? maxArpRateSelect.value : 128), 1, 256);
-let transportPlaying = true;
+let minArpRate = readArpRateControlValue(minArpRateSelect, 8);
+let maxArpRate = readArpRateControlValue(maxArpRateSelect, 128);
+let transportPlaying = false;
+let transportDriveAngularVelocity = 0;
+const transportSpinDownDamping = 0.955;
+let lfoRotorAngle1 = 0;
+let lfoRotorAngle2 = 0;
 let currentArpRateExp = Math.log2(Math.max(1, Math.min(minArpRate, maxArpRate)));
 let arpClockAccumulator = 0;
 let bassTickCounter = 0;
@@ -1764,6 +2154,7 @@ let wingAssignedLabels = [];
 let bassAssignedMidis = [];
 let bassStepIndex = 0;
 let bassRootMidi = 0;
+let currentBassNoteMidi = null;
 let rootNoteLabelEl = null;
 let wingNoteLabelEls = [];
 let bassRootNoteLabelEl = null;
@@ -1834,11 +2225,11 @@ function getLfoValueAtTime(shape, rateDivision, timeSec) {
   }
 
   if (shape === "rampUp") {
-    return phase;
+    return phase * 2 - 1;
   }
 
   if (shape === "rampDown") {
-    return 1 - phase;
+    return (1 - phase) * 2 - 1;
   }
 
   if (shape === "randomSH") {
@@ -1856,11 +2247,11 @@ function getLfoValueAtTime(shape, rateDivision, timeSec) {
   }
 
   if (shape === "expUp") {
-    return Math.pow(phase, 2.4);
+    return Math.pow(phase, 2.4) * 2 - 1;
   }
 
   if (shape === "expDown") {
-    return 1 - Math.pow(phase, 2.4);
+    return (1 - Math.pow(phase, 2.4)) * 2 - 1;
   }
 
   if (shape === "doubleSine") {
@@ -2129,6 +2520,64 @@ function createVoiceModFilter(timeSec) {
   return graph;
 }
 
+function createBassVoiceFilter(timeSec) {
+  const bassFilterCfg = getBassFilterConfig(bassFilterType);
+  const stage = buildVoiceFilterStage(timeSec, bassFilterCfg.type, bassFilterCutoffHz, bassFilterResonance, bassFilterCfg.depthDb);
+  const graph = {
+    input: stage.input,
+    output: stage.output,
+  };
+  voiceFilterMeta.set(graph, { stage1: stage, stage2: null });
+  return graph;
+}
+
+function formatBassWaveformShort(type) {
+  const map = {
+    sine: "Sine",
+    triangle: "Triangle",
+    sawtooth: "Saw",
+    square: "Square",
+    pulse: "Pulse",
+  };
+  return map[type] || "Triangle";
+}
+
+function normalizeBassFilterMode(mode) {
+  const raw = String(mode || "").toLowerCase();
+  const map = {
+    lp12: "lp12",
+    lp24: "lp24",
+    bp12: "bp12",
+    bp24: "bp24",
+    hp12: "hp12",
+    hp24: "hp24",
+    lowpass: "lp24",
+    bandpass: "bp24",
+    highpass: "hp24",
+  };
+  return map[raw] || "lp24";
+}
+
+function getBassFilterConfig(mode) {
+  const normalized = normalizeBassFilterMode(mode);
+  if (normalized === "lp12") {
+    return { mode: normalized, type: "lowpass", depthDb: 16, shortLabel: "LP12" };
+  }
+  if (normalized === "bp12") {
+    return { mode: normalized, type: "bandpass", depthDb: 16, shortLabel: "BP12" };
+  }
+  if (normalized === "hp12") {
+    return { mode: normalized, type: "highpass", depthDb: 16, shortLabel: "HP12" };
+  }
+  if (normalized === "bp24") {
+    return { mode: normalized, type: "bandpass", depthDb: 24, shortLabel: "BP24" };
+  }
+  if (normalized === "hp24") {
+    return { mode: normalized, type: "highpass", depthDb: 24, shortLabel: "HP24" };
+  }
+  return { mode: "lp24", type: "lowpass", depthDb: 24, shortLabel: "LP24" };
+}
+
 function applyPitchLfo(detuneParams, startTime, duration) {
   if (!hasTargetMod("pitch")) {
     return;
@@ -2325,12 +2774,22 @@ function buildBassNotesFromScale() {
   const targetBassMidi = bassToneLocked ? displayedRootMidi - 24 : displayedRootMidi + bassPitchOffset;
 
   bassRootMidi = quantizeMidiToScaleNearest(targetBassMidi, displayedRootMidi, quantizeScale);
+  currentBassNoteMidi = bassRootMidi;
   const directionSign = bassInvertScale ? -1 : 1;
   const stepDistance = Math.max(1, Math.abs(arpDistanceSemitones));
 
   for (let i = 0; i < bassStepCount; i += 1) {
     const rawMidi = bassRootMidi + directionSign * stepDistance * i;
     notes.push(quantizeMidiToScaleNearest(rawMidi, displayedRootMidi, quantizeScale));
+  }
+
+  if (bassRandomizeScale && notes.length > 1) {
+    for (let i = notes.length - 1; i > 0; i -= 1) {
+      const swapIndex = Math.floor(Math.random() * (i + 1));
+      const temp = notes[i];
+      notes[i] = notes[swapIndex];
+      notes[swapIndex] = temp;
+    }
   }
 
   return notes;
@@ -2356,7 +2815,7 @@ function rebuildNoteSprites() {
     }
   }
 
-  bassRootNoteLabelEl = makeNoteLabel(midiToNoteNameWithOctave(bassRootMidi), true);
+  bassRootNoteLabelEl = makeNoteLabel(midiToNoteNameWithOctave(currentBassNoteMidi ?? bassRootMidi), true);
   if (bassRootNoteLabelEl) {
     bassRootNoteLabelEl.style.display = "block";
   }
@@ -2427,6 +2886,28 @@ function updateNoteLabelPositions() {
   }
 }
 
+function setLfoTraceScreenPosition(traceEl, worldPos) {
+  if (!traceEl) {
+    return;
+  }
+
+  lfoTurboOverlayScreen.copy(worldPos).applyMatrix4(stabilizer.matrixWorld).project(camera);
+  const screenX = (lfoTurboOverlayScreen.x * 0.5 + 0.5) * window.innerWidth;
+  const screenY = (-lfoTurboOverlayScreen.y * 0.5 + 0.5) * window.innerHeight;
+  traceEl.style.display = "block";
+  traceEl.style.left = `${screenX}px`;
+  traceEl.style.top = `${screenY + 60}px`;
+}
+
+function updateLfoTraceOverlayPositions() {
+  if (!lfoTrace1 && !lfoTrace2) {
+    return;
+  }
+  stabilizer.updateMatrixWorld(true);
+  setLfoTraceScreenPosition(lfoTrace1, lfoTurboLeftCenter);
+  setLfoTraceScreenPosition(lfoTrace2, lfoTurboRightCenter);
+}
+
 function refreshWingAssignments() {
   wingAssignedMidis = buildWingNotesFromScale();
   wingAssignedLabels = wingAssignedMidis.map((midi) => midiToNoteNameWithOctave(midi));
@@ -2457,6 +2938,8 @@ function rebuildSpinnerGeometry() {
   stabilizer.add(spinner);
   stabilizer.add(bassSpinner);
   updatePulleyVisual(spinner.position.y, bassSpinner.position.y);
+  updateLfoTurboVisual(spinner.position.y);
+  syncBassEngineVisualState();
   rebuildNoteSprites();
 }
 
@@ -2739,10 +3222,42 @@ function syncBassReleaseLockUi() {
   updateBassReleaseValueLabel(bassReleaseLocked ? envelopeReleaseSeconds : bassEnvelopeReleaseSeconds);
 }
 
+function getBassRateDivisionFromControl(controlEl, fallback = 2) {
+  if (!controlEl) {
+    return fallback;
+  }
+  const idx = THREE.MathUtils.clamp(Math.round(Number(controlEl.value)), 0, BASS_RATE_DIVISIONS.length - 1);
+  return BASS_RATE_DIVISIONS[idx] || fallback;
+}
+
+function formatBassRateDivision(division) {
+  return `1/${Math.max(1, Math.round(division || 2))}`;
+}
+
+function syncBassRateLockUi() {
+  if (bassRateSlider) {
+    bassRateSlider.disabled = bassRateLocked;
+    if (bassRateLocked) {
+      bassRateDivision = 2;
+      bassRateSlider.value = String(BASS_RATE_DIVISIONS.indexOf(2));
+    }
+  }
+
+  if (bassRateControl) {
+    bassRateControl.classList.toggle("isDisabled", bassRateLocked);
+  }
+
+  if (bassRateValue) {
+    bassRateValue.textContent = formatBassRateDivision(bassRateDivision);
+  }
+}
+
 if (bassEngineToggle) {
   bassEnabled = bassEngineToggle.checked;
+  syncBassEngineVisualState();
   bassEngineToggle.addEventListener("change", () => {
     bassEnabled = bassEngineToggle.checked;
+    syncBassEngineVisualState();
     showToast(bassEnabled ? "Bass engine on." : "Bass engine off.");
   });
 }
@@ -2753,6 +3268,15 @@ if (bassInvertScaleToggle) {
     bassInvertScale = bassInvertScaleToggle.checked;
     refreshWingAssignments();
     showToast(bassInvertScale ? "Bass scale inverted." : "Bass scale normal order.");
+  });
+}
+
+if (bassRandomizeScaleToggle) {
+  bassRandomizeScale = bassRandomizeScaleToggle.checked;
+  bassRandomizeScaleToggle.addEventListener("change", () => {
+    bassRandomizeScale = bassRandomizeScaleToggle.checked;
+    refreshWingAssignments();
+    showToast(bassRandomizeScale ? "Bass scale randomized." : "Bass scale order fixed.");
   });
 }
 
@@ -2796,20 +3320,72 @@ if (bassLockReleaseToggle) {
   });
 }
 
+if (bassLockRateToggle) {
+  bassRateLocked = bassLockRateToggle.checked;
+  bassLockRateToggle.addEventListener("change", () => {
+    bassRateLocked = bassLockRateToggle.checked;
+    bassTickCounter = 0;
+    syncBassRateLockUi();
+  });
+}
+
+if (bassRateSlider) {
+  bassRateDivision = getBassRateDivisionFromControl(bassRateSlider, 2);
+  bassRateSlider.addEventListener("input", () => {
+    if (bassRateLocked) {
+      return;
+    }
+    bassRateDivision = getBassRateDivisionFromControl(bassRateSlider, 2);
+    bassTickCounter = 0;
+    syncBassRateLockUi();
+  });
+}
+
 if (bassEnvReleaseSlider) {
-  bassEnvelopeReleaseSeconds = THREE.MathUtils.clamp(Number(bassEnvReleaseSlider.value || 0.31), 0.03, 1.2);
+  bassEnvelopeReleaseSeconds = THREE.MathUtils.clamp(Number(bassEnvReleaseSlider.value || 0.31), 0.03, 3);
   bassEnvReleaseSlider.addEventListener("input", () => {
     if (bassReleaseLocked) {
       return;
     }
-    bassEnvelopeReleaseSeconds = THREE.MathUtils.clamp(Number(bassEnvReleaseSlider.value), 0.03, 1.2);
+    bassEnvelopeReleaseSeconds = THREE.MathUtils.clamp(Number(bassEnvReleaseSlider.value), 0.03, 3);
     updateBassReleaseValueLabel(bassEnvelopeReleaseSeconds);
+  });
+}
+
+if (bassWaveformSelect) {
+  bassWaveform = bassWaveformSelect.value;
+  bassWaveformSelect.addEventListener("change", () => {
+    bassWaveform = bassWaveformSelect.value;
+    updateFxLabels();
+  });
+}
+
+if (bassFilterTypeSelect) {
+  bassFilterType = normalizeBassFilterMode(bassFilterType);
+  bassFilterTypeSelect.addEventListener("change", () => {
+    bassFilterType = normalizeBassFilterMode(bassFilterTypeSelect.value);
+    updateFxLabels();
+  });
+}
+
+if (bassFilterFreqSlider) {
+  bassFilterFreqSlider.addEventListener("input", () => {
+    bassFilterCutoffHz = THREE.MathUtils.clamp(Number(bassFilterFreqSlider.value), filterFreqMinHz, filterFreqMaxHz);
+    updateFxLabels();
+  });
+}
+
+if (bassFilterResSlider) {
+  bassFilterResSlider.addEventListener("input", () => {
+    bassFilterResonance = THREE.MathUtils.clamp(Number(bassFilterResSlider.value), filterResMin, filterResMax);
+    updateFxLabels();
   });
 }
 
 syncBassToneLockUi();
 syncBassStepControls();
 syncBassReleaseLockUi();
+syncBassRateLockUi();
 
 if (soundSourceSelect) {
   soundSourceSelect.addEventListener("change", () => {
@@ -2966,7 +3542,7 @@ if (arpDirectionSelect) {
 
 if (arpDistanceSlider && arpDistanceValue) {
   const updateArpDistanceUi = () => {
-    arpDistanceSemitones = THREE.MathUtils.clamp(Number(arpDistanceSlider.value), -24, 24);
+    arpDistanceSemitones = THREE.MathUtils.clamp(Number(arpDistanceSlider.value), 0, 24);
     arpDistanceValue.textContent = `${arpDistanceSemitones >= 0 ? "+" : ""}${arpDistanceSemitones} st`;
     resetArpSequence();
     refreshWingAssignments();
@@ -2996,26 +3572,29 @@ if (tempoInput) {
 }
 
 function normalizeArpRateBounds() {
-  minArpRate = THREE.MathUtils.clamp(Number(minArpRateSelect ? minArpRateSelect.value : minArpRate), 1, 256);
-  maxArpRate = THREE.MathUtils.clamp(Number(maxArpRateSelect ? maxArpRateSelect.value : maxArpRate), 1, 256);
+  minArpRate = readArpRateControlValue(minArpRateSelect, minArpRate);
+  maxArpRate = readArpRateControlValue(maxArpRateSelect, maxArpRate);
 
   if (minArpRate > maxArpRate) {
     const tmp = minArpRate;
     minArpRate = maxArpRate;
     maxArpRate = tmp;
-    if (minArpRateSelect) minArpRateSelect.value = String(minArpRate);
-    if (maxArpRateSelect) maxArpRateSelect.value = String(maxArpRate);
   }
+
+  if (minArpRateSelect) minArpRateSelect.value = String(getArpRateIndexFromDivision(minArpRate, 8));
+  if (maxArpRateSelect) maxArpRateSelect.value = String(getArpRateIndexFromDivision(maxArpRate, 128));
+  if (minArpRateValue) minArpRateValue.textContent = formatRateDivision(minArpRate);
+  if (maxArpRateValue) maxArpRateValue.textContent = formatRateDivision(maxArpRate);
 }
 
 if (minArpRateSelect) {
-  minArpRateSelect.addEventListener("change", () => {
+  minArpRateSelect.addEventListener("input", () => {
     normalizeArpRateBounds();
   });
 }
 
 if (maxArpRateSelect) {
-  maxArpRateSelect.addEventListener("change", () => {
+  maxArpRateSelect.addEventListener("input", () => {
     normalizeArpRateBounds();
   });
 }
@@ -3032,8 +3611,6 @@ if (transportToggleBtn) {
   transportToggleBtn.addEventListener("click", () => {
     transportPlaying = !transportPlaying;
     if (!transportPlaying) {
-      arpClockAccumulator = 0;
-      bassTickCounter = 0;
       showToast("Transport stopped.");
     } else {
       if (audioCtx) {
@@ -3085,6 +3662,49 @@ function formatMsWithRhythmHint(milliseconds) {
   return `${ms}ms`;
 }
 
+function getLfoRotorHz(rateDivision) {
+  const beatsPerSecond = tempoBpm / 60;
+  return THREE.MathUtils.clamp((beatsPerSecond * Math.max(0.25, rateDivision)) / 4, 0.12, 14);
+}
+
+function getCombinedLfoVisualValueAtTime(timeSec) {
+  const amount1 = Math.max(0, lfoAmount);
+  const amount2 = Math.max(0, lfoAmount2);
+  const v1 = getLfoValueAtTime(lfoShape, lfoRateDivision, timeSec) * amount1;
+  const v2 = getLfoValueAtTime(lfoShape2, lfoRateDivision2, timeSec) * amount2;
+  const total = v1 + v2;
+  if (Math.abs(total) > 0.0001) {
+    return THREE.MathUtils.clamp(total, -1, 1);
+  }
+  return getLfoValueAtTime(lfoShape, lfoRateDivision, timeSec) * 0.8;
+}
+
+function buildLfoTracePoints(shape, rateDivision, timeSec, width = 56, height = 28, sampleCount = 28) {
+  const points = [];
+  const duration = Math.max(0.08, (60 / Math.max(30, tempoBpm)) * 1.25);
+  const start = timeSec - duration;
+
+  for (let i = 0; i < sampleCount; i += 1) {
+    const frac = i / (sampleCount - 1);
+    const t = start + frac * duration;
+    const value = getLfoValueAtTime(shape, rateDivision, t);
+    const x = Math.round(frac * width * 100) / 100;
+    const y = Math.round((height * 0.5 - value * (height * 0.36)) * 100) / 100;
+    points.push(`${x},${y}`);
+  }
+
+  return points.join(" ");
+}
+
+function updateLfoFloatTraces(timeSec) {
+  if (!lfoTraceLine1 || !lfoTraceLine2) {
+    return;
+  }
+
+  lfoTraceLine1.setAttribute("points", buildLfoTracePoints(lfoShape, lfoRateDivision, timeSec));
+  lfoTraceLine2.setAttribute("points", buildLfoTracePoints(lfoShape2, lfoRateDivision2, timeSec));
+}
+
 function updateFxLabels() {
   if (reverbDecayValue) {
     reverbDecayValue.textContent = `${reverbDecaySeconds.toFixed(1)}s`;
@@ -3103,6 +3723,18 @@ function updateFxLabels() {
   }
   if (lfoRateValue2) {
     lfoRateValue2.textContent = formatRateDivision(lfoRateDivision2);
+  }
+  if (lfoTraceTitle1) {
+    lfoTraceTitle1.textContent = `LFO1 ${formatRateDivision(lfoRateDivision)}`;
+  }
+  if (lfoTraceTitle2) {
+    lfoTraceTitle2.textContent = `LFO2 ${formatRateDivision(lfoRateDivision2)}`;
+  }
+  if (lfoRateSelect) {
+    lfoRateSelect.value = String(getLfoRateIndexFromDivision(lfoRateDivision, 16));
+  }
+  if (lfoRateSelect2) {
+    lfoRateSelect2.value = String(getLfoRateIndexFromDivision(lfoRateDivision2, 16));
   }
   if (lfoAmountValue) {
     lfoAmountValue.textContent = `${Math.round(lfoAmount * 100)}%`;
@@ -3133,6 +3765,18 @@ function updateFxLabels() {
   }
   if (filter2ResValue) {
     filter2ResValue.textContent = filter2Resonance.toFixed(2);
+  }
+  if (bassWaveformValue) {
+    bassWaveformValue.textContent = formatBassWaveformShort(bassWaveform);
+  }
+  if (bassFilterTypeValue) {
+    bassFilterTypeValue.textContent = getBassFilterConfig(bassFilterType).shortLabel;
+  }
+  if (bassFilterFreqValue) {
+    bassFilterFreqValue.textContent = `${Math.round(bassFilterCutoffHz)}Hz`;
+  }
+  if (bassFilterResValue) {
+    bassFilterResValue.textContent = bassFilterResonance.toFixed(2);
   }
 }
 
@@ -3230,7 +3874,7 @@ function enableFxContainerSwipe(containerEl, sliderEl) {
 function setupFxContainerSwipes() {
   const fxControls = document.querySelectorAll(".modModal .fxControl");
   fxControls.forEach((containerEl) => {
-    const sliderEl = containerEl.querySelector('input[type="range"]');
+    const sliderEl = containerEl.querySelector(':scope > input[type="range"]');
     if (!sliderEl) {
       return;
     }
@@ -3278,7 +3922,7 @@ function initAudio() {
   reverbConvolver = audioCtx.createConvolver();
   reverbWetGain = audioCtx.createGain();
   delaySendGain = audioCtx.createGain();
-  delayNode = audioCtx.createDelay(0.25);
+  delayNode = audioCtx.createDelay(0.5);
   delayFeedbackGain = audioCtx.createGain();
   delayWetGain = audioCtx.createGain();
   beatRepeaterInputGain = audioCtx.createGain();
@@ -3997,29 +4641,32 @@ function playBassTick(speed) {
     const t = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const sub = audioCtx.createOscillator();
-    const body = audioCtx.createBiquadFilter();
     const ampMod = audioCtx.createGain();
     const gain = audioCtx.createGain();
-    const voiceFilter = createVoiceModFilter(t);
+    const bassFilter = createBassVoiceFilter(t);
     const brightness = THREE.MathUtils.clamp(speed / maxSpin, 0, 1);
     const pool = bassAssignedMidis.length ? bassAssignedMidis : [getDisplayedRootMidi() - 24, getDisplayedRootMidi() - 17];
     const baseIdx = ((bassStepIndex % pool.length) + pool.length) % pool.length;
     const idx = angularVelocity < 0 ? pool.length - 1 - baseIdx : baseIdx;
     const bassMidi = pool[idx];
+    currentBassNoteMidi = bassMidi;
+    updateBassCenterNoteLabelVisual();
     bassStepIndex = (bassStepIndex + 1) % pool.length;
     const bassFreq = midiToFreq(bassMidi);
     const baseRelease = bassReleaseLocked ? envelopeReleaseSeconds : bassEnvelopeReleaseSeconds;
-    const release = getReleaseWithLfo(baseRelease, t, 0.03, 1.2);
+    const release = getReleaseWithLfo(baseRelease, t, 0.03, 3);
     const lfoDuration = release + 0.05;
 
-    osc.type = "triangle";
+    if (bassWaveform === "pulse" && pulsePeriodicWave) {
+      osc.setPeriodicWave(pulsePeriodicWave);
+    } else if (bassWaveform === "pulse") {
+      osc.type = "square";
+    } else {
+      osc.type = bassWaveform;
+    }
     sub.type = "sine";
     osc.frequency.setValueAtTime(bassFreq, t);
     sub.frequency.setValueAtTime(bassFreq * 0.5, t);
-
-    body.type = "lowpass";
-    body.frequency.setValueAtTime(220 + brightness * 120, t);
-    body.Q.setValueAtTime(0.9, t);
 
     ampMod.gain.setValueAtTime(1, t);
     gain.gain.setValueAtTime(0.0001, t);
@@ -4028,12 +4675,11 @@ function playBassTick(speed) {
 
     applyPitchLfo([osc.detune, sub.detune], t, lfoDuration);
     applyAmplitudeLfo(ampMod.gain, t, lfoDuration);
-    applyFilterLfo(voiceFilter, t, lfoDuration);
+    applyFilterLfo(bassFilter, t, lfoDuration);
 
-    osc.connect(body);
-    sub.connect(body);
-    body.connect(voiceFilter.input);
-    voiceFilter.output.connect(ampMod);
+    osc.connect(bassFilter.input);
+    sub.connect(bassFilter.input);
+    bassFilter.output.connect(ampMod);
     ampMod.connect(gain);
     routeVoiceToMix(gain, false);
     osc.start(t);
@@ -4061,23 +4707,48 @@ function animate() {
   const speedNorm = THREE.MathUtils.clamp(userSpinSpeed / maxSpin, 0, 1);
   const arpInterval = getCurrentArpIntervalSeconds(speedNorm, dt);
   currentArpIntervalSeconds = arpInterval;
-  const transportAngularVelocity = transportPlaying
+  const targetTransportAngularVelocity = transportPlaying
     ? ((Math.PI * 2) / Math.max(1, wingCount)) / Math.max(arpInterval, 1 / 512) * spinDirection
     : 0;
 
+  if (transportPlaying) {
+    transportDriveAngularVelocity = targetTransportAngularVelocity;
+  } else {
+    transportDriveAngularVelocity *= Math.pow(transportSpinDownDamping, dt * 60);
+    if (Math.abs(transportDriveAngularVelocity) < 0.003) {
+      transportDriveAngularVelocity = 0;
+    }
+  }
+
   // Wheel stays in clocked motion at transport speed, while gesture spin adds expressive push.
-  angularVelocity = transportAngularVelocity + gestureAngularVelocity;
+  angularVelocity = bladeBrakeActive ? 0 : transportDriveAngularVelocity + gestureAngularVelocity;
   spinAngle += angularVelocity * dt;
   const spinSpeed = Math.abs(angularVelocity);
+  const rotorDirection = Math.abs(angularVelocity) > 0.01 ? (angularVelocity < 0 ? -1 : 1) : spinDirection;
+  const machineEnergy = THREE.MathUtils.clamp(spinSpeed / maxSpin, 0, 1);
 
-  if (transportPlaying) {
+  lfoRotorAngle1 += rotorDirection * getLfoRotorHz(lfoRateDivision) * dt * Math.PI * 2 * (0.55 + machineEnergy * 0.6);
+  lfoRotorAngle2 += rotorDirection * getLfoRotorHz(lfoRateDivision2) * dt * Math.PI * 2 * (0.55 + machineEnergy * 0.6);
+  if (lfoTurboLeftFan) {
+    lfoTurboLeftFan.rotation.z = lfoRotorAngle1;
+  }
+  if (lfoTurboRightFan) {
+    lfoTurboRightFan.rotation.z = -lfoRotorAngle2;
+  }
+
+  const lfoScopeTime = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+  updateLfoFloatTraces(lfoScopeTime);
+
+  const clockActive = (transportPlaying || Math.abs(transportDriveAngularVelocity) > 0.02) && !bladeBrakeActive;
+  if (clockActive) {
     arpClockAccumulator += dt;
     let tickCount = 0;
     while (arpClockAccumulator >= arpInterval && tickCount < 32) {
       arpClockAccumulator -= arpInterval;
       triggerSpinBeat(now, spinSpeed);
       bassTickCounter += 1;
-      if (bassEnabled && bassTickCounter % 2 === 0 && now - lastBassNoteTime >= minBassTickMs) {
+      const bassTickDivision = bassRateLocked ? 2 : bassRateDivision;
+      if (bassEnabled && bassTickCounter % bassTickDivision === 0 && now - lastBassNoteTime >= minBassTickMs) {
         playBassTick(spinSpeed);
         lastBassNoteTime = now;
       }
@@ -4099,9 +4770,11 @@ function animate() {
   const targetSpinnerY = octaveVisualOffset + shiftDragOffsetY;
   spinner.position.y = THREE.MathUtils.lerp(spinner.position.y, targetSpinnerY, 0.18);
   const bassRelativeOctave = THREE.MathUtils.clamp((bassRootMidi - getDisplayedRootMidi()) / 12, -4, 4);
-  const targetBassY = bassRelativeOctave * 0.34 + bassDragOffsetY;
+  const targetBassY = bassRelativeOctave * 0.34 + bassDragOffsetY + bassVisualBaseYOffset;
   bassSpinner.position.y = THREE.MathUtils.lerp(bassSpinner.position.y, targetBassY, 0.14);
   updatePulleyVisual(spinner.position.y, bassSpinner.position.y);
+  updateLfoTurboVisual(spinner.position.y);
+  updateLfoTraceOverlayPositions();
 
   targetQuat.copy(deviceQuat).invert();
   targetQuat.premultiply(neutralQuat);
@@ -4214,15 +4887,15 @@ if (lfoShapeSelect2) {
 }
 
 if (lfoRateSelect) {
-  lfoRateSelect.addEventListener("change", () => {
-    lfoRateDivision = THREE.MathUtils.clamp(Number(lfoRateSelect.value), 0.5, 128);
+  lfoRateSelect.addEventListener("input", () => {
+    lfoRateDivision = getLfoRateDivisionFromControl(lfoRateSelect, 16);
     updateFxLabels();
   });
 }
 
 if (lfoRateSelect2) {
-  lfoRateSelect2.addEventListener("change", () => {
-    lfoRateDivision2 = THREE.MathUtils.clamp(Number(lfoRateSelect2.value), 0.5, 128);
+  lfoRateSelect2.addEventListener("input", () => {
+    lfoRateDivision2 = getLfoRateDivisionFromControl(lfoRateSelect2, 16);
     updateFxLabels();
   });
 }

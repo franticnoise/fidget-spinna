@@ -115,17 +115,17 @@
         </div>
 
         <div class="fxControl">
-          <div class="fxHeader"><label for="wingCountSlider">Wing Count</label><span id="wingCountValue">6</span></div>
-          <input id="wingCountSlider" type="range" min="3" max="12" step="1" value="6" />
+          <div class="fxHeader"><label for="wingCountSlider">Wing Count</label><span id="wingCountValue">3</span></div>
+          <input id="wingCountSlider" type="range" min="3" max="12" step="1" value="3" />
         </div>
 
         <div class="fxControl">
-          <div class="fxHeader"><label for="octaveRangeSlider">Octave Range</label><span id="octaveRangeValue">+0</span></div>
-          <input id="octaveRangeSlider" type="range" min="0" max="10" step="1" value="0" />
+          <div class="fxHeader"><label for="octaveRangeSlider">Octave Range</label><span id="octaveRangeValue">+3</span></div>
+          <input id="octaveRangeSlider" type="range" min="0" max="10" step="1" value="3" />
         </div>
 
         <div class="fxControl">
-          <div class="fxHeader"><label for="baseOctaveSlider">Base Octave</label><span id="baseOctaveValue">+0</span></div>
+          <div class="fxHeader"><label for="baseOctaveSlider">Octave Shift</label><span id="baseOctaveValue">+0</span></div>
           <input id="baseOctaveSlider" type="range" min="-4" max="4" step="1" value="0" />
         </div>
 
@@ -141,8 +141,8 @@
         </div>
 
         <div class="fxControl">
-          <div class="fxHeader"><label for="arpDistanceSlider">Distance</label><span id="arpDistanceValue">+3 st</span></div>
-          <input id="arpDistanceSlider" type="range" min="-24" max="24" step="1" value="3" />
+          <div class="fxHeader"><label for="arpDistanceSlider">Inverval Distance</label><span id="arpDistanceValue">+6 st</span></div>
+          <input id="arpDistanceSlider" type="range" min="0" max="24" step="1" value="6" />
         </div>
 
         <div class="fxControl">
@@ -167,31 +167,20 @@
     <div id="transportInline">
       <label for="tempoInput">Tempo</label>
       <input id="tempoInput" type="number" min="30" max="280" step="1" value="120" />
-      <label for="minArpRateSelect">Arp Rate</label>
-      <select id="minArpRateSelect">
-        <option value="1">1/1</option>
-        <option value="2">1/2</option>
-        <option value="4">1/4</option>
-        <option value="8" selected>1/8</option>
-        <option value="16">1/16</option>
-        <option value="32">1/32</option>
-        <option value="64">1/64</option>
-        <option value="128">1/128</option>
-        <option value="256">1/256</option>
-      </select>
       <button id="transportToggleBtn" type="button" aria-label="Stop">&#9632;</button>
-      <label for="maxArpRateSelect">Max Speed</label>
-      <select id="maxArpRateSelect">
-        <option value="1">1/1</option>
-        <option value="2">1/2</option>
-        <option value="4">1/4</option>
-        <option value="8">1/8</option>
-        <option value="16">1/16</option>
-        <option value="32">1/32</option>
-        <option value="64">1/64</option>
-        <option value="128" selected>1/128</option>
-        <option value="256">1/256</option>
-      </select>
+      <div id="arpRateStack" aria-label="Arp speed controls">
+        <div class="transportSliderRow">
+          <label for="minArpRateSelect">Arp Rate</label>
+          <input id="minArpRateSelect" type="range" min="0" max="9" step="1" value="3" />
+          <span id="minArpRateValue">1/8</span>
+        </div>
+        <div class="transportSliderRow">
+          <label for="maxArpRateSelect">Max Speed</label>
+          <input id="maxArpRateSelect" type="range" min="0" max="9" step="1" value="7" />
+          <span id="maxArpRateValue">1/128</span>
+        </div>
+      </div>
+
     </div>
 
     <div id="filterModal" class="modModal" hidden aria-label="Filter panel">
@@ -271,64 +260,130 @@
     <div id="bassPanel" class="modModal" hidden aria-label="Bass panel">
       <div class="bassRow">
         <div class="fxControl" id="bassEngineControl">
-          <div class="fxHeader"><label for="bassEngineToggle">Bass Engine</label><span>Power</span></div>
+          <div class="fxHeader"><label for="bassEngineToggle">Bass Engine</label><span class="powerIcon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3v8"/><path d="M7.1 5.8A8 8 0 1 0 16.9 5.8"/></svg></span></div>
           <label class="switch" for="bassEngineToggle">
             <input id="bassEngineToggle" type="checkbox" />
             <span class="slider"></span>
           </label>
         </div>
-
-        <div class="fxControl" id="bassInvertScaleControl">
-          <div class="fxHeader"><label for="bassInvertScaleToggle">Invert Scale</label><span>Order</span></div>
-          <label class="switch" for="bassInvertScaleToggle">
-            <input id="bassInvertScaleToggle" type="checkbox" />
-            <span class="slider"></span>
-          </label>
-        </div>
       </div>
 
       <div class="bassRow">
-        <div class="fxControl" id="bassToneLockControl">
-          <div class="fxHeader"><label for="bassLockToneToggle">Locked Tone</label><span>Pitch Lock</span></div>
-          <label class="switch" for="bassLockToneToggle">
-            <input id="bassLockToneToggle" type="checkbox" />
-            <span class="slider"></span>
-          </label>
+        <div class="fxControl bassDualStack" id="bassFilterFreqControl">
+          <div class="bassStackItem">
+            <div class="fxHeader"><label for="bassFilterFreqSlider">Filter Freq</label><span id="bassFilterFreqValue">220Hz</span></div>
+            <input id="bassFilterFreqSlider" type="range" min="40" max="16000" step="1" value="220" />
+          </div>
+          <div class="bassStackItem" id="bassFilterResControl">
+            <div class="fxHeader"><label for="bassFilterResSlider">Filter Res</label><span id="bassFilterResValue">0.90</span></div>
+            <input id="bassFilterResSlider" type="range" min="0.1" max="20" step="0.1" value="0.9" />
+          </div>
         </div>
 
-        <div class="fxControl" id="bassPitchControl">
-          <div class="fxHeader"><label for="bassPitchSlider">Bass Pitch</label><span id="bassPitchValue">-12 st</span></div>
-          <input id="bassPitchSlider" type="range" min="-24" max="24" step="1" value="-12" />
+        <div class="fxControl bassDualStack" id="bassWaveformControl">
+          <div class="bassStackItem">
+            <div class="fxHeader"><label for="bassWaveformSelect">Wavetable</label><span id="bassWaveformValue">Triangle</span></div>
+            <select id="bassWaveformSelect">
+              <option value="sine">Sine</option>
+              <option value="triangle" selected>Triangle</option>
+              <option value="sawtooth">Saw</option>
+              <option value="square">Square</option>
+              <option value="pulse">Pulse</option>
+            </select>
+          </div>
+          <div class="bassStackItem" id="bassFilterTypeControl">
+            <div class="fxHeader"><label for="bassFilterTypeSelect">Filter Type</label><span id="bassFilterTypeValue">LP24</span></div>
+            <select id="bassFilterTypeSelect">
+              <option value="lp24" selected>LP24</option>
+              <option value="lp12">LP12</option>
+              <option value="bp24">BP24</option>
+              <option value="bp12">BP12</option>
+              <option value="hp24">HP24</option>
+              <option value="hp12">HP12</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div class="bassRow">
-        <div class="fxControl" id="bassStepLockControl">
-          <div class="fxHeader"><label for="bassLockStepsToggle">Locked Steps</label><span>Half Main</span></div>
-          <label class="switch" for="bassLockStepsToggle">
-            <input id="bassLockStepsToggle" type="checkbox" checked />
-            <span class="slider"></span>
-          </label>
+      <div class="bassRow bassLockPairRow">
+        <div class="fxControl bassLockPairCol">
+          <div class="bassInlineLock" id="bassToneLockControl">
+            <div class="fxHeader"><label for="bassPitchSlider">Bass Pitch</label></div>
+            <span id="bassPitchValue" class="bassInlineValue">-12 st</span>
+            <label class="switch" for="bassLockToneToggle">
+              <input id="bassLockToneToggle" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="fxControl bassCompactSlider" id="bassPitchControl">
+            <input id="bassPitchSlider" type="range" min="-24" max="24" step="1" value="-12" />
+          </div>
         </div>
 
-        <div class="fxControl" id="bassStepsControl">
-          <div class="fxHeader"><label for="bassStepsSlider">Bass Steps</label><span id="bassStepsValue">3</span></div>
-          <input id="bassStepsSlider" type="range" min="3" max="12" step="1" value="3" />
+        <div class="fxControl bassLockPairCol">
+          <div class="bassInlineLock" id="bassStepLockControl">
+            <div class="fxHeader"><label for="bassStepsSlider">Bass Steps</label></div>
+            <span id="bassStepsValue" class="bassInlineValue">3</span>
+            <label class="switch" for="bassLockStepsToggle">
+              <input id="bassLockStepsToggle" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="fxControl bassCompactSlider" id="bassStepsControl">
+            <input id="bassStepsSlider" type="range" min="3" max="12" step="1" value="3" />
+          </div>
         </div>
       </div>
 
-      <div class="bassRow">
-        <div class="fxControl" id="bassReleaseLockControl">
-          <div class="fxHeader"><label for="bassLockReleaseToggle">Locked Release</label><span>Main Env</span></div>
-          <label class="switch" for="bassLockReleaseToggle">
-            <input id="bassLockReleaseToggle" type="checkbox" checked />
-            <span class="slider"></span>
-          </label>
+      <div class="bassRow bassLockPairRow">
+        <div class="fxControl bassLockPairCol">
+          <div class="bassInlineLock" id="bassRateLockControl">
+            <div class="fxHeader"><label for="bassRateSlider">Bass Rate</label></div>
+            <span id="bassRateValue" class="bassInlineValue">1/2</span>
+            <label class="switch" for="bassLockRateToggle">
+              <input id="bassLockRateToggle" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="fxControl bassCompactSlider" id="bassRateControl">
+            <input id="bassRateSlider" type="range" min="0" max="3" step="1" value="1" />
+          </div>
         </div>
 
-        <div class="fxControl" id="bassReleaseControl">
-          <div class="fxHeader"><label for="bassEnvReleaseSlider">Bass Amp Release</label><span id="bassEnvReleaseValue">310ms</span></div>
-          <input id="bassEnvReleaseSlider" type="range" min="0.03" max="1.2" step="0.01" value="0.31" />
+        <div class="fxControl bassLockPairCol">
+          <div class="bassInlineLock" id="bassReleaseLockControl">
+            <div class="fxHeader"><label for="bassEnvReleaseSlider">Bass Amp Release</label></div>
+            <span id="bassEnvReleaseValue" class="bassInlineValue">310ms</span>
+            <label class="switch" for="bassLockReleaseToggle">
+              <input id="bassLockReleaseToggle" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="fxControl bassCompactSlider" id="bassReleaseControl">
+            <input id="bassEnvReleaseSlider" type="range" min="0.03" max="3" step="0.01" value="0.31" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bassRow bassLockPairRow">
+        <div class="fxControl bassScaleSwitchControl" id="bassInvertScaleControl">
+          <div class="bassInlineLock">
+            <div class="fxHeader"><label for="bassInvertScaleToggle">Invert Scale</label></div>
+            <label class="switch" for="bassInvertScaleToggle">
+              <input id="bassInvertScaleToggle" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="fxControl bassScaleSwitchControl" id="bassRandomizeScaleControl">
+          <div class="bassInlineLock">
+            <div class="fxHeader"><label for="bassRandomizeScaleToggle">Randomize Scale</label></div>
+            <label class="switch" for="bassRandomizeScaleToggle">
+              <input id="bassRandomizeScaleToggle" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -344,7 +399,7 @@
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="delayTimeSlider">Delay Time</label><span id="delayTimeValue">60ms</span></div>
-        <input id="delayTimeSlider" type="range" min="0" max="0.2" step="0.001" value="0.06" />
+        <input id="delayTimeSlider" type="range" min="0" max="0.333" step="0.001" value="0.06" />
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="delayAmountSlider">Delay Amount</label><span id="delayAmountValue">62%</span></div>
@@ -378,15 +433,19 @@
           <option value="64">1/64</option>
         </select>
       </div>
+      <div class="fxControl beatRepHoldControl">
+        <div class="fxHeader"><label for="beatRepHoldBtn">Beat Repeater Hold</label><span>Momentary</span></div>
+        <button id="beatRepHoldBtn" type="button" aria-label="Hold for beat repeater stutter">Hold</button>
+      </div>
     </div>
 
     <div id="mod1Modal" class="modModal" hidden aria-label="Mod 1 panel">
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoShapeSelect">LFO Shape</label><span class="lfoShapeLegend">Mode <svg id="lfoShapePreview1" class="lfoShapePreview" viewBox="0 0 64 18" aria-hidden="true"></svg></span></div>
         <select id="lfoShapeSelect">
-          <option value="sine">Sine</option>
+          <option value="sine" selected>Sine</option>
           <option value="triangle">Triangle</option>
-          <option value="square" selected>Square</option>
+          <option value="square">Square</option>
           <option value="rampUp">Ramp Up</option>
           <option value="rampDown">Ramp Down</option>
           <option value="randomSH">Random S&amp;H</option>
@@ -404,17 +463,7 @@
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoRateSelect">LFO Rate</label><span id="lfoRateValue">1/16</span></div>
-        <select id="lfoRateSelect">
-          <option value="0.5">2/1</option>
-          <option value="1">1/1</option>
-          <option value="2">1/2</option>
-          <option value="4">1/4</option>
-          <option value="8">1/8</option>
-          <option value="16" selected>1/16</option>
-          <option value="32">1/32</option>
-          <option value="64">1/64</option>
-          <option value="128">1/128</option>
-        </select>
+        <input id="lfoRateSelect" type="range" min="0" max="8" step="1" value="5" />
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoAmountSlider">LFO Amount</label><span id="lfoAmountValue">0%</span></div>
@@ -437,9 +486,9 @@
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoShapeSelect2">LFO 2 Shape</label><span class="lfoShapeLegend">Mode <svg id="lfoShapePreview2" class="lfoShapePreview" viewBox="0 0 64 18" aria-hidden="true"></svg></span></div>
         <select id="lfoShapeSelect2">
-          <option value="sine">Sine</option>
+          <option value="sine" selected>Sine</option>
           <option value="triangle">Triangle</option>
-          <option value="square" selected>Square</option>
+          <option value="square">Square</option>
           <option value="rampUp">Ramp Up</option>
           <option value="rampDown">Ramp Down</option>
           <option value="randomSH">Random S&amp;H</option>
@@ -457,17 +506,7 @@
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoRateSelect2">LFO 2 Rate</label><span id="lfoRateValue2">1/16</span></div>
-        <select id="lfoRateSelect2">
-          <option value="0.5">2/1</option>
-          <option value="1">1/1</option>
-          <option value="2">1/2</option>
-          <option value="4">1/4</option>
-          <option value="8">1/8</option>
-          <option value="16" selected>1/16</option>
-          <option value="32">1/32</option>
-          <option value="64">1/64</option>
-          <option value="128">1/128</option>
-        </select>
+        <input id="lfoRateSelect2" type="range" min="0" max="8" step="1" value="5" />
       </div>
       <div class="fxControl">
         <div class="fxHeader"><label for="lfoAmountSlider2">LFO 2 Amount</label><span id="lfoAmountValue2">0%</span></div>
@@ -488,12 +527,15 @@
 
     <canvas id="app"></canvas>
     <div id="spinnerNoteLayer" aria-hidden="true"></div>
-
-    <div id="beatRepHandle" aria-label="Beat repeater hold control">
-      <div id="beatRepCable" aria-hidden="true"></div>
-      <button id="beatRepHoldBtn" type="button" aria-label="Hold for beat repeater stutter">
-        <span>BEATREP</span>
-      </button>
+    <div id="lfoFloatLayer" aria-hidden="true">
+      <div id="lfoTrace1" class="lfoTraceFloat">
+        <div id="lfoTraceTitle1" class="lfoTraceTitle">LFO1 1/16</div>
+        <svg viewBox="0 0 56 28" aria-hidden="true"><polyline id="lfoTraceLine1" points="0,14 56,14" fill="none" /></svg>
+      </div>
+      <div id="lfoTrace2" class="lfoTraceFloat">
+        <div id="lfoTraceTitle2" class="lfoTraceTitle">LFO2 1/16</div>
+        <svg viewBox="0 0 56 28" aria-hidden="true"><polyline id="lfoTraceLine2" points="0,14 56,14" fill="none" /></svg>
+      </div>
     </div>
 
     <script type="module" src="./main.js"></script>
